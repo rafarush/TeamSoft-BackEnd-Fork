@@ -30,14 +30,7 @@
 		<java.version>21</java.version>
 	</properties>
 	<dependencies>
-		<dependency>
-			<groupId>org.springframework.boot</groupId>
-			<artifactId>spring-boot-starter-data-jdbc</artifactId>
-		</dependency>
-		<dependency>
-			<groupId>org.springframework.boot</groupId>
-			<artifactId>spring-boot-starter-data-r2dbc</artifactId>
-		</dependency>
+
 		<dependency>
 			<groupId>org.springframework.boot</groupId>
 			<artifactId>spring-boot-starter-web</artifactId>
@@ -46,28 +39,76 @@
 		<dependency>
 			<groupId>org.postgresql</groupId>
 			<artifactId>postgresql</artifactId>
-			<scope>runtime</scope>
+
 		</dependency>
-		<dependency>
-			<groupId>org.postgresql</groupId>
-			<artifactId>r2dbc-postgresql</artifactId>
-			<scope>runtime</scope>
-		</dependency>
+
+
 		<dependency>
 			<groupId>org.projectlombok</groupId>
 			<artifactId>lombok</artifactId>
 			<optional>true</optional>
 		</dependency>
+
 		<dependency>
 			<groupId>org.springframework.boot</groupId>
 			<artifactId>spring-boot-starter-test</artifactId>
 			<scope>test</scope>
 		</dependency>
+
+		<!-- Knife4j OpenAPI3 -->
 		<dependency>
-			<groupId>io.projectreactor</groupId>
-			<artifactId>reactor-test</artifactId>
-			<scope>test</scope>
+			<groupId>com.github.xiaoymin</groupId>
+			<artifactId>knife4j-openapi3-jakarta-spring-boot-starter</artifactId>
+			<version>4.4.0</version>
 		</dependency>
+
+		<!--  Spring Data JPA  -->
+		<dependency>
+			<groupId>org.springframework.boot</groupId>
+			<artifactId>spring-boot-starter-data-jpa</artifactId>
+		</dependency>
+
+		<!-- Mapper -->
+		<dependency>
+			<groupId>org.modelmapper</groupId>
+			<artifactId>modelmapper</artifactId>
+			<version>3.2.4</version>
+		</dependency>
+
+		<!--       &lt;!&ndash; Spring Security &ndash;&gt; -->
+		<!--       <dependency> -->
+		<!--         <groupId>org.springframework.boot</groupId> -->
+		<!--         <artifactId>spring-boot-starter-security</artifactId> -->
+		<!--       </dependency> -->
+		<!--       &lt;!&ndash; JWT para autenticación &ndash;&gt; -->
+		<!--       <dependency> -->
+		<!--         <groupId>io.jsonwebtoken</groupId> -->
+		<!--         <artifactId>jjwt-api</artifactId> -->
+		<!--         <version>0.11.5</version> -->
+		<!--       </dependency> -->
+		<!--       <dependency> -->
+		<!--         <groupId>io.jsonwebtoken</groupId> -->
+		<!--         <artifactId>jjwt-impl</artifactId> -->
+		<!--         <version>0.11.5</version> -->
+		<!--         <scope>runtime</scope> -->
+		<!--       </dependency> -->
+		<!--       <dependency> -->
+		<!--         <groupId>io.jsonwebtoken</groupId> -->
+		<!--         <artifactId>jjwt-jackson</artifactId> -->
+		<!--         <version>0.11.5</version> -->
+		<!--         <scope>runtime</scope> -->
+		<!--       </dependency> -->
+		<!--       &lt;!&ndash; Para encriptación de contraseñas &ndash;&gt; -->
+		<!--       <dependency> -->
+		<!--         <groupId>org.springframework.security</groupId> -->
+		<!--         <artifactId>spring-security-crypto</artifactId> -->
+		<!--       </dependency> -->
+		<!--       &lt;!&ndash; Para pruebas de seguridad &ndash;&gt; -->
+		<!--       <dependency> -->
+		<!--         <groupId>org.springframework.security</groupId> -->
+		<!--         <artifactId>spring-security-test</artifactId> -->
+		<!--         <scope>test</scope> -->
+		<!--       </dependency> -->
 	</dependencies>
 
 	<build>
