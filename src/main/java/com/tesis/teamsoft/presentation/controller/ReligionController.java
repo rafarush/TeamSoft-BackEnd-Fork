@@ -35,7 +35,7 @@ public class ReligionController {
     }
 
     @RequestMapping(value = "/findAll_religion", method = RequestMethod.GET)
-    public ResponseEntity<List<ReligionDTO.ReligionResponseDTO>> findAllReligions() {
+    public ResponseEntity<List<?>> findAllReligions() {
         return new ResponseEntity<>(religionService.findAllByOrderByIdAsc(), HttpStatus.OK);
     }
 
