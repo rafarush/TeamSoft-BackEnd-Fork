@@ -20,12 +20,12 @@ public class ReligionController {
     ReligionServiceImpl religionService;
 
     @RequestMapping(value = "/create_religion", method = RequestMethod.POST)
-    public ResponseEntity<ReligionDTO.ReligionResponseDTO> createReligion(@RequestBody ReligionDTO.ReligionCreateDTO religionDTO) {
+    public ResponseEntity<?> createReligion(@RequestBody ReligionDTO.ReligionCreateDTO religionDTO) {
         return new ResponseEntity<>(religionService.saveReligion(religionDTO), HttpStatus.OK);
     }
 
     @RequestMapping(value = "/udpate_religion/{id}" , method = RequestMethod.PUT)
-    public ResponseEntity<ReligionDTO> updateReligion(@RequestBody ReligionDTO religionDTO, @PathVariable Long id) {
+    public ResponseEntity<?> updateReligion(@RequestBody ReligionDTO.ReligionCreateDTO religionDTO, @PathVariable Long id) {
         return new ResponseEntity<>(religionService.updateReligion(religionDTO, id), HttpStatus.OK);
     }
 
@@ -35,13 +35,13 @@ public class ReligionController {
     }
 
     @RequestMapping(value = "/findAll_religion", method = RequestMethod.GET)
-    public ResponseEntity<List<ReligionDTO.ReligionResponseDTO>> findAllReligions() {
+    public ResponseEntity<List<?>> findAllReligions() {
         return new ResponseEntity<>(religionService.findAllByOrderByIdAsc(), HttpStatus.OK);
     }
 
 
     @RequestMapping(value = "findByID_religion/{id}", method = RequestMethod.GET)
-    public ResponseEntity<ReligionDTO> findUserById(@PathVariable Long id) {
+    public ResponseEntity<?> findUserById(@PathVariable Long id) {
         return new ResponseEntity<>(religionService.findReligionById(id), HttpStatus.OK);
     }
 

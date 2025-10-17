@@ -35,14 +35,14 @@ public class ReligionServiceImpl implements IReligionService {
     }
 
     @Override
-    public ReligionDTO updateReligion(ReligionDTO religionDTO, Long id) {
+    public ReligionDTO.ReligionResponseDTO updateReligion(ReligionDTO.ReligionCreateDTO religionDTO, Long id) {
 
         if (!religionRepository.existsById(id)) {
             throw new RuntimeException("Religion not found");
         }
 
         ReligionEntity savedReligion = religionRepository.save(modelMapper.map(religionDTO, ReligionEntity.class));
-        return modelMapper.map(savedReligion, ReligionDTO.class);
+        return modelMapper.map(savedReligion, ReligionDTO.ReligionResponseDTO.class);
     }
 
     @Override
@@ -72,12 +72,12 @@ public class ReligionServiceImpl implements IReligionService {
     }
 
     @Override
-    public ReligionDTO findReligionById(Long id) {
+    public ReligionDTO.ReligionResponseDTO findReligionById(Long id) {
 
         if (!religionRepository.existsById(id)) {
             throw new RuntimeException("Religion not found");
         }
 
-        return modelMapper.map(religionRepository.findById(id), ReligionDTO.class);
+        return modelMapper.map(religionRepository.findById(id), ReligionDTO.ReligionResponseDTO.class);
     }
 }

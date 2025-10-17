@@ -10,7 +10,7 @@ public interface IReligionService {
 
     ReligionDTO.ReligionResponseDTO saveReligion(ReligionDTO.ReligionCreateDTO religionDTO);
 
-    ReligionDTO updateReligion(ReligionDTO religionDTO, Long id);
+    ReligionDTO.ReligionResponseDTO updateReligion(ReligionDTO.ReligionCreateDTO religionDTO, Long id);
 
     String deleteReligion(Long id);
 
@@ -18,5 +18,5 @@ public interface IReligionService {
 
     List<ReligionDTO.ReligionResponseDTO> findAllByOrderByIdAsc();
 
-    ReligionDTO findReligionById(Long id);
+    ReligionDTO.ReligionResponseDTO findReligionById(Long id);
 }
