@@ -22,29 +22,27 @@ public class AgeGroupEntity implements Serializable {
     //Atributos
     //=====================================================================================================================
     @Id//<--Marca el atributo como llave primaria de la entidad
-//    @Basic(optional = false)//<--Se utiliza para definir que un atributo es obligatorio y debe tener valor
-//    @NotNull//<--Se utiliza para especificar que un campo no puede ser null
     @GeneratedValue(strategy = GenerationType.SEQUENCE, generator = "CUST_SEQ")//<--Indica que el valor de la llave primaria se genera automáticamente
     @SequenceGenerator(sequenceName = "hibernate_sequence", allocationSize = 1, name = "CUST_SEQ")//<--Se utiliza para definir un generador de secuencias
     private Long id;
 
     /*Nombre del grupo de edad, Se establece como NotNull, tamaño mínimo 1 y máximo 255*/
     @Basic(optional = false)
-    @NotBlank()//<--La cadena de caracteres no puede ser "", " ", o null
+    @NotBlank(message = "Age group name is required")//<--La cadena de caracteres no puede ser "", " ", o null
     @Column(name = "age_group_name", unique = true  )//<--Le asigna el nombre que tendra la columba en la base de datos
     private String ageGroupName;//<--Establece que el atributo sera único
 
     @Basic(optional = false)
-    @NotNull
-    @Min(value = 0)//Establece límites para la edad máxima o mínima
-    @Max(value = 150)
+    @NotNull(message = "Maximum age is required")
+    @Min(value = 0, message = "Maximum age must be at least 0")//Establece límites para la edad máxima o mínima
+    @Max(value = 150, message = "Maximum age cannot exceed 150")
     @Column(name = "max_age")
     private int maxAge;
 
     @Basic(optional = false)
-    @NotNull
-    @Min(value = 0)//Establece límites para la edad máxima o mínima
-    @Max(value = 150)
+    @NotNull(message = "Minimum age is required")
+    @Min(value = 0, message = "Minimum age must be at least 0")//Establece límites para la edad máxima o mínima
+    @Max(value = 150, message = "Minimum age cannot exceed 150")
     @Column(name = "min_age")
     private int minAge;
 
@@ -52,17 +50,6 @@ public class AgeGroupEntity implements Serializable {
      a traves del atributo mapeado(ageGroup) en la clase PersonEntity*/
     @OneToMany(cascade = CascadeType.ALL, mappedBy = "ageGroup")
     private List<PersonEntity> personList;
-    //=====================================================================================================================
-
-
-    //Validaciones
-    //=====================================================================================================================
-
-    // Validación personalizada para asegurar que minAge <= maxAge
-    @AssertTrue(message = "La edad mínima debe ser menor o igual a la edad máxima")
-    public boolean isAgeRangeValid() {
-        return minAge <= maxAge;
-    }
     //=====================================================================================================================
 
 
