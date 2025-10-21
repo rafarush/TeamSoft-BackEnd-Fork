@@ -38,18 +38,25 @@ public class ReligionServiceImpl implements IReligionService {
     public ReligionDTO.ReligionResponseDTO updateReligion(ReligionDTO.ReligionCreateDTO religionDTO, Long id) {
 
         if (!religionRepository.existsById(id)) {
-            throw new RuntimeException("Religion not found");
+            throw new RuntimeException("Religion not found with ID: " + id);
         }
 
-        ReligionEntity savedReligion = religionRepository.save(modelMapper.map(religionDTO, ReligionEntity.class));
-        return modelMapper.map(savedReligion, ReligionDTO.ReligionResponseDTO.class);
+        try {
+            ReligionEntity savedReligion = modelMapper.map(religionDTO, ReligionEntity.class);
+            savedReligion.setId(id);
+            religionRepository.save(savedReligion);
+            return modelMapper.map(savedReligion, ReligionDTO.ReligionResponseDTO.class);
+
+        } catch (Exception e) {
+            throw new IllegalArgumentException("Error updating religion: " + e.getMessage());
+        }
     }
 
     @Override
     public String deleteReligion(Long id) {
 
         if (!religionRepository.existsById(id)) {
-            throw new RuntimeException("Religion not found");
+            throw new RuntimeException("Religion not found with ID: " + id);
         }
         religionRepository.deleteById(id);
         return "Religion deleted";
@@ -57,27 +64,35 @@ public class ReligionServiceImpl implements IReligionService {
 
     @Override
     public List<ReligionDTO.ReligionResponseDTO> findAllReligion() {
-        return religionRepository.findAll()
-                .stream()
-                .map(religionEntity -> modelMapper.map(religionEntity, ReligionDTO.ReligionResponseDTO.class))
-                .collect(Collectors.toList());
+        try {
+            return religionRepository.findAll()
+                    .stream()
+                    .map(religionEntity -> modelMapper.map(religionEntity, ReligionDTO.ReligionResponseDTO.class))
+                    .collect(Collectors.toList());
+        } catch (Exception e) {
+            throw new RuntimeException("Error finding all religions " + e.getMessage());
+        }
     }
 
     @Override
     public List<ReligionDTO.ReligionResponseDTO> findAllByOrderByIdAsc() {
-        return religionRepository.findAllByOrderByIdAsc()
-                .stream()
-                .map(religionEntity -> modelMapper.map(religionEntity, ReligionDTO.ReligionResponseDTO.class))
-                .collect(Collectors.toList());
+        try {
+
+            return religionRepository.findAllByOrderByIdAsc()
+                    .stream()
+                    .map(religionEntity -> modelMapper.map(religionEntity, ReligionDTO.ReligionResponseDTO.class))
+                    .collect(Collectors.toList());
+        } catch (Exception e) {
+            throw new RuntimeException("Error finding all religions: " + e.getMessage());
+        }
     }
 
     @Override
     public ReligionDTO.ReligionResponseDTO findReligionById(Long id) {
 
-        if (!religionRepository.existsById(id)) {
-            throw new RuntimeException("Religion not found");
-        }
+        ReligionEntity religion = religionRepository.findById(id).
+                orElseThrow(() -> new RuntimeException("Religion not found with ID: " + id));
 
-        return modelMapper.map(religionRepository.findById(id), ReligionDTO.ReligionResponseDTO.class);
+        return modelMapper.map(religion, ReligionDTO.ReligionResponseDTO.class);
     }
 }

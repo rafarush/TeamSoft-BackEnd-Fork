@@ -55,36 +55,4 @@ public class ReligionEntity implements Serializable {
         return hash;
     }
     //===================================================================================
-
-
-//    public ReligionEntity() {
-//    }
-//
-//    public ReligionEntity(String religionName) {
-//        this.religionName = religionName;
-//    }
-//
-//    public void setId(Long id) {
-//        this.id = id;
-//    }
-//
-//    public void setReligionName(String religionName) {
-//        this.religionName = religionName;
-//    }
-//
-//    public void setPersonList(List<PersonEntity> personList) {
-//        this.personList = personList;
-//    }
-//
-//    public Long getId() {
-//        return id;
-//    }
-//
-//    public String getReligionName() {
-//        return religionName;
-//    }
-//
-//    public List<PersonEntity> getPersonList() {
-//        return personList;
-//    }
 }
