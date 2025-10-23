@@ -72,7 +72,7 @@ public class RoleEntity implements Serializable {
 
     /*Se establece la relacion con RoleCompetition(tabla y clase),
     a traves del atributo mapeado(roles) en la clase RoleCompetitionEntity*/
-    @OneToMany(cascade = CascadeType.ALL, mappedBy = "role")
+    @OneToMany(cascade = CascadeType.ALL, mappedBy = "role", orphanRemoval = true)
     private List<RoleCompetitionEntity> roleCompetitionList;
 
     @OneToMany(cascade = CascadeType.ALL, mappedBy = "role")

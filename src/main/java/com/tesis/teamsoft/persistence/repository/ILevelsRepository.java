@@ -10,4 +10,6 @@ import java.util.List;
 public interface ILevelsRepository extends JpaRepository<LevelsEntity, Long> {
 
     List<LevelsEntity> findAllByOrderByIdAsc();
+
+    long countAllByOrderByIdAsc();
 }

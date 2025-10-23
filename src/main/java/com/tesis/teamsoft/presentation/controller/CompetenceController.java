@@ -1,7 +1,7 @@
 package com.tesis.teamsoft.presentation.controller;
 
-import com.tesis.teamsoft.presentation.dto.AgeGroupDTO;
-import com.tesis.teamsoft.service.implementation.AgeGroupServiceImpl;
+import com.tesis.teamsoft.presentation.dto.CompetenceDTO;
+import com.tesis.teamsoft.service.implementation.CompetenceServiceImpl;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -14,16 +14,16 @@ import java.util.HashMap;
 import java.util.Map;
 
 @RestController
-@Tag(name = "AgeGroups")
-@RequestMapping("/ageGroup")
-public class AgeGroupController {
+@Tag(name = "Competence")
+@RequestMapping("/competence")
+public class CompetenceController {
 
     @Autowired
-    private AgeGroupServiceImpl ageGroupService;
+    private CompetenceServiceImpl competenceService;
 
-    @RequestMapping(value = "/create_ageGroup", method = RequestMethod.POST)
-    public ResponseEntity<?> createAgeGroup(@Valid @RequestBody AgeGroupDTO.AgeGroupCreateDTO ageGroupDTO, BindingResult bindingResult) {
-
+    @RequestMapping(value = "/create_competence", method = RequestMethod.POST)
+    public ResponseEntity<?> createCompetence(@Valid @RequestBody CompetenceDTO.CompetenceCreateDTO competenceDTO,
+                                              BindingResult bindingResult) {
         if (bindingResult.hasErrors()) {
             Map<String, String> errors = new HashMap<>();
             bindingResult.getFieldErrors().forEach(error ->
@@ -32,8 +32,12 @@ public class AgeGroupController {
             return new ResponseEntity<>(errors, HttpStatus.BAD_REQUEST);
         }
 
-        try {
-            return new ResponseEntity<>(ageGroupService.saveAgeGroup(ageGroupDTO), HttpStatus.CREATED);
+        try{
+            return new ResponseEntity<>(competenceService.saveCompetence(competenceDTO), HttpStatus.CREATED);
+        } catch (RuntimeException e) {
+            Map<String, String> error = new HashMap<>();
+            error.put("Error: ", e.getMessage());
+            return new ResponseEntity<>(error, HttpStatus.NOT_FOUND);
         } catch (Exception e) {
             Map<String, String> error = new HashMap<>();
             error.put("Error: ", e.getMessage());
@@ -41,10 +45,10 @@ public class AgeGroupController {
         }
     }
 
-    @RequestMapping(value = "/update_ageGroup/{id}", method = RequestMethod.PUT)
-    public ResponseEntity<?> updateAgeGroup(@Valid @RequestBody AgeGroupDTO.AgeGroupCreateDTO ageGroupDTO
-            , BindingResult bindingResult
-            , @PathVariable long id) {
+    @RequestMapping(value = "/update_competence/{id}", method = RequestMethod.PUT)
+    public ResponseEntity<?> updateCompetence(@Valid @RequestBody CompetenceDTO.CompetenceCreateDTO competenceDTO,
+                                              BindingResult bindingResult,
+                                              @PathVariable Long id) {
 
         if (bindingResult.hasErrors()) {
             Map<String, String> errors = new HashMap<>();
@@ -54,56 +58,51 @@ public class AgeGroupController {
         }
 
         try {
-            return new ResponseEntity<>(ageGroupService.updateAgeGroup(ageGroupDTO, id), HttpStatus.OK);
-
+            return new ResponseEntity<>(competenceService.updateCompetence(competenceDTO, id), HttpStatus.OK);
         } catch (IllegalArgumentException e) {
             Map<String, String> error = new HashMap<>();
-            error.put("Error: ", e.getMessage());
+            error.put("Error", e.getMessage());
             return new ResponseEntity<>(error, HttpStatus.BAD_REQUEST);
-
         } catch (RuntimeException e) {
             Map<String, String> error = new HashMap<>();
-            error.put("Error: ", e.getMessage());
+            error.put("Error", e.getMessage());
             return new ResponseEntity<>(error, HttpStatus.NOT_FOUND);
         }
     }
 
-    @RequestMapping(value = "/delete_ageGroup/{id}", method = RequestMethod.DELETE)
-    public ResponseEntity<?> deleteAgeGroup(@PathVariable Long id) {
-
+    @RequestMapping(value = "/delete_competence/{id}", method = RequestMethod.DELETE)
+    public ResponseEntity<?> deleteCompetence(@PathVariable Long id) {
         try {
-            return new ResponseEntity<>(ageGroupService.deleteAgeGroup(id), HttpStatus.OK);
+            return new ResponseEntity<>(competenceService.deleteCompetence(id), HttpStatus.OK);
         } catch (RuntimeException e) {
             Map<String, String> error = new HashMap<>();
-            error.put("Error: ", e.getMessage());
+            error.put("Error", e.getMessage());
             return new ResponseEntity<>(error, HttpStatus.NOT_FOUND);
-
         } catch (Exception e) {
             Map<String, String> error = new HashMap<>();
-            error.put("Error: ", e.getMessage());
+            error.put("Error", e.getMessage());
             return new ResponseEntity<>(error, HttpStatus.CONFLICT);
         }
     }
 
-    @RequestMapping(value = "/findAll_ageGroup", method = RequestMethod.GET)
-    public ResponseEntity<?> findAllAgeGroup() {
+    @RequestMapping(value = "/findAll_competence", method = RequestMethod.GET)
+    public ResponseEntity<?> findAllCompetence() {
         try {
-            return new ResponseEntity<>(ageGroupService.findAllByOrderByIdAsc(), HttpStatus.OK);
+            return new ResponseEntity<>(competenceService.findAllByOrderByIdAsc(), HttpStatus.OK);
         } catch (Exception e) {
             Map<String, String> error = new HashMap<>();
-            error.put("Error> ", e.getMessage());
+            error.put("Error", e.getMessage());
             return new ResponseEntity<>(error, HttpStatus.INTERNAL_SERVER_ERROR);
         }
     }
 
-    @RequestMapping(value = "findByID_ageGroup/{id}", method = RequestMethod.GET)
-    public ResponseEntity<?> findAgeGroupById(@PathVariable Long id) {
+    @RequestMapping(value = "/findByID_competence/{id}", method = RequestMethod.GET)
+    public ResponseEntity<?> findCompetenceById(@PathVariable Long id) {
         try {
-            return new ResponseEntity<>(ageGroupService.findAgeGroupById(id), HttpStatus.FOUND);
-
+            return new ResponseEntity<>(competenceService.findCompetenceById(id), HttpStatus.OK);
         } catch (RuntimeException e) {
             Map<String, String> error = new HashMap<>();
-            error.put("Error: ", e.getMessage());
+            error.put("Error", e.getMessage());
             return new ResponseEntity<>(error, HttpStatus.NOT_FOUND);
         }
     }
