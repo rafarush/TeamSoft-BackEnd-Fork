@@ -30,9 +30,9 @@ public class PersonConflictEntity implements Serializable {
     @ManyToOne(optional = false)
     private ConflictIndexEntity index;
 
-    @JoinColumn(name = "person_conflict_fk", referencedColumnName = "id")//<--Establece la relacion con la clase PersonConflictEnitty
+    @JoinColumn(name = "person_conflict_fk", referencedColumnName = "id")//<--Establece la relacion con la clase PersonEnitty
     @ManyToOne(optional = false)
-    private PersonConflictEntity personConflict;
+    private PersonEntity personConflict;
 
     @JoinColumn(name = "person_fk", referencedColumnName = "id")//<--Establece la relacion con la clase PersonEnitty
     @ManyToOne(optional = false)

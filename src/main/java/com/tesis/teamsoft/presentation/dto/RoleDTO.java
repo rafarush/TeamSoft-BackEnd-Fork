@@ -64,7 +64,7 @@ public class RoleDTO {
     @Data
     public static class RoleCompetitionResponseDTO {
         private Long id;
-        private CompetenceDTO.CompetenceResponseDTO competence;
+        private CompetenceDTO.CompetenceMinimalDTO competence;
         private CompetenceImportanceDTO.CompetenceImportanceResponseDTO competenceImportance;
         private LevelsDTO.LevelsResponseDTO level;
     }

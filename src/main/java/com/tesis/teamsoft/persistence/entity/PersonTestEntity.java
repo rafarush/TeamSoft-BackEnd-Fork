@@ -30,47 +30,47 @@ public class PersonTestEntity implements Serializable {
     @Basic(optional = false)
     @NotNull
     @Column(name = "e_s")//<--Le asigna el nombre que tendra la columba en la base de datos
-    private Character eS;
+    private Character e_S;
 
     @Basic(optional = false)
     @NotNull
     @Column(name = "i_d")
-    private Character iD;
+    private Character i_D;
 
     @Basic(optional = false)
     @NotNull
     @Column(name = "c_o")
-    private Character cO;
+    private Character c_O;
 
     @Basic(optional = false)
     @NotNull
     @Column(name = "i_s")
-    private Character iS;
+    private Character i_S;
 
     @Basic(optional = false)
     @NotNull
     @Column(name = "c_e")
-    private Character cE;
+    private Character c_E;
 
     @Basic(optional = false)
     @NotNull
     @Column(name = "i_r")
-    private Character iR;
+    private Character i_R;
 
     @Basic(optional = false)
     @NotNull
     @Column(name = "m_e")
-    private Character mE;
+    private Character m_E;
 
     @Basic(optional = false)
     @NotNull
     @Column(name = "c_h")
-    private Character cH;
+    private Character c_H;
 
     @Basic(optional = false)
     @NotNull
     @Column(name = "i_f")
-    private Character iF;
+    private Character i_F;
 
     @Basic(optional = true)
     @Size(min = 1, max = 1024)//<--Restringe el tamaño del elemento, dandole mínimo y máximo

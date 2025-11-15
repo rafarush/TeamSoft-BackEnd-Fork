@@ -204,7 +204,7 @@ public class RoleServiceImpl implements IRoleService {
                     .map(rc -> {
                         RoleDTO.RoleCompetitionResponseDTO dto = new RoleDTO.RoleCompetitionResponseDTO();
                         dto.setId(rc.getId());
-                        dto.setCompetence(modelMapper.map(rc.getCompetence(), CompetenceDTO.CompetenceResponseDTO.class));
+                        dto.setCompetence(modelMapper.map(rc.getCompetence(), CompetenceDTO.CompetenceMinimalDTO.class));
                         dto.setCompetenceImportance(modelMapper.map(rc.getCompetenceImportance(), CompetenceImportanceDTO.CompetenceImportanceResponseDTO.class));
                         dto.setLevel(modelMapper.map(rc.getLevel(), LevelsDTO.LevelsResponseDTO.class));
                         return dto;

@@ -35,4 +35,12 @@ public class CompetenceDTO {
 
         List<CompetenceDimensionDTO.CompetenceDimensionResponseDTO> dimensionList;
     }
+
+    @Data
+    public static class CompetenceMinimalDTO {
+        private Long id;
+        private String competitionName;
+        private String description;
+        private Boolean technical;
+    }
 }

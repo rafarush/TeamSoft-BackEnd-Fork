@@ -40,7 +40,7 @@ public class PersonEntity implements Serializable {
     @NotNull
     @Size(min = 1, max = 1024)
     @Column(name = "id_card")
-    private String idCard;
+    private String card;
 
     @Basic(optional = false)
     @NotNull
@@ -100,6 +100,12 @@ public class PersonEntity implements Serializable {
      a traves del atributo mapeado(person) en la clase CompetenceValueEntity*/
     @OneToMany(cascade = CascadeType.ALL, mappedBy = "person")
     private List<CompetenceValueEntity> competenceValueList;
+
+    @OneToMany(cascade = CascadeType.ALL, mappedBy = "person")
+    private  List<PersonConflictEntity> personConflictList;
+
+    @OneToMany(cascade = CascadeType.ALL, mappedBy = "personConflict")
+    private  List<PersonConflictEntity> personConflictWithList;
 
     /*Se establece la relacion con PersonalInterests(tabla y clase),
      a traves del atributo mapeado(person) en la clase PersonalInterestsEntity*/
@@ -173,6 +179,17 @@ public class PersonEntity implements Serializable {
         }
 
         return age;
+    }
+
+    public RoleExperienceEntity getRoleExperience(Long idRol) {
+        RoleExperienceEntity xp = new RoleExperienceEntity();
+        for (RoleExperienceEntity roleExperience : this.roleExperienceList) {
+            if ((roleExperience.getRole().getId()).equals(idRol)) {
+                xp = roleExperience;
+                break;
+            }
+        }
+        return xp;
     }
 
     @Override
