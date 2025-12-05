@@ -11,4 +11,6 @@ import java.util.Optional;
 public interface IConflictIndexRepository extends JpaRepository<ConflictIndexEntity, Long> {
 
     List<ConflictIndexEntity> findAllByOrderByIdAsc();
+
+    ConflictIndexEntity findFirstByOrderByWeightDesc();
 }

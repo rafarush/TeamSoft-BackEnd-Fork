@@ -9,6 +9,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
+import java.util.ResourceBundle;
 import java.util.stream.Collectors;
 
 @Service
@@ -76,6 +77,7 @@ public class AgeGroupServiceImpl implements IAgeGroupService {
 
     @Override
     public List<AgeGroupDTO.AgeGroupResponseDTO> findAllByOrderByIdAsc(){
+        int cantIntentos = Integer.parseInt(ResourceBundle.getBundle("algorithmConf").getString("cantIntentos"));
         try {
             return ageGroupRepository.findAllByOrderByIdAsc()
                     .stream()

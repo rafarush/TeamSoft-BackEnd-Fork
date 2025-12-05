@@ -1,7 +1,7 @@
 package com.tesis.teamsoft.service.implementation;
 
-import com.tesis.teamsoft.presentation.dto.DefaultTreeNode;
-import com.tesis.teamsoft.presentation.dto.TreeNode;
+import com.tesis.teamsoft.persistence.repository.*;
+import com.tesis.teamsoft.presentation.dto.*;
 import com.tesis.teamsoft.service.interfaces.ITeamFormationStepThreeService;
 import evolutionary_algorithms.complement.CrossoverType;
 import evolutionary_algorithms.complement.MutationType;
@@ -18,6 +18,9 @@ import com.tesis.teamsoft.metaheuristics.operator.TeamBuilder;
 import com.tesis.teamsoft.metaheuristics.operator.TeamFormationOperator;
 import com.tesis.teamsoft.metaheuristics.restrictions.*;
 import com.tesis.teamsoft.metaheuristics.util.*;
+import org.modelmapper.ModelMapper;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Service;
 import problem.definition.ObjetiveFunction;
 import problem.definition.Problem;
 import problem.definition.State;
@@ -26,15 +29,46 @@ import java.io.IOException;
 import java.lang.reflect.InvocationTargetException;
 import java.text.DecimalFormat;
 import java.util.*;
+import java.util.function.Function;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import java.util.stream.Collectors;
 
+@Service
 public class TeamFormationStepThreeImpl implements ITeamFormationStepThreeService {
+
+    private final ModelMapper modelMapper = new ModelMapper();
+
+    @Autowired
+    private IPersonRepository personRepository;
+
+    @Autowired
+    private ILevelsRepository lvlRepository;
+
+    @Autowired
+    private ICostDistanceRepository costDistanceRepository;
+
+    @Autowired
+    private IConflictIndexRepository conflictIndexRepository;
+
+    @Autowired
+    private IProjectRepository projectRepository;
+
+    @Autowired
+    private IPersonGroupRepository iPersonGroupRepository;
 
     /**
      * Construir equipos (mejorando solución con la aplicacón metaheurísticas)
      */
-    public TreeNode getTeam(TeamFormationParameters parameters) throws Exception {
+    public TreeNode getTeam(TeamFormationParameters parameters, List<Long> projectsIDs, List<Long> groupIDs) throws Exception {
+
+        parameters.setProjects(formatProjects(getUnsavedProjects(projectsIDs)));
+        parameters.setSearchArea(getSearchArea(getGroups(groupIDs)));
+
+        parameters.setMaxLevel(lvlRepository.findFirstByOrderByLevelsDesc());
+        parameters.setMinLevel(lvlRepository.findFirstByOrderByLevelsAsc());
+        parameters.setMaxCostDistance(costDistanceRepository.findFirstByOrderByCostDistanceDesc());
+        parameters.setMaxConflictIndex(conflictIndexRepository.findFirstByOrderByWeightDesc());
 
         ProjectRoleState initialVoidSolution = TeamBuilder.getInitialVoidSolution(parameters); // construir una solucion inicial vacía (contendrá las personas que ya fueron asignadas a cada rol)
 
@@ -193,10 +227,9 @@ public class TeamFormationStepThreeImpl implements ITeamFormationStepThreeServic
         TreeNode root = TreeNode.createRootNode(); // En lugar de new DefaultTreeNode()
 
         if (!teamProposal.isEmpty()) {
-            String format = ResourceBundle.getBundle("/algorithmConf").getString("decimalFormat");
+            String format = ResourceBundle.getBundle("algorithmConf").getString("decimalFormat");
             DecimalFormat df = new DecimalFormat(format);
             root.setExpanded(true);
-
             TreeNode prop;
             TreeNode projectNode;
             TreeNode projectEvaluation;
@@ -208,13 +241,23 @@ public class TeamFormationStepThreeImpl implements ITeamFormationStepThreeServic
             for (State state : teamProposal) {
                 if (state != null) {
                     StringBuilder eval = new StringBuilder();
-                    // ... (el resto del código permanece igual)
-
+                    if (state.getEvaluation().size() == 1) {
+                        eval.append(" ").append(objectiveFunctions.getFirst().getClass().getField("className").get(null));
+                        for (int i = 1; i < objectiveFunctions.size(); i++) {
+                            eval.append(" | ").append(objectiveFunctions.get(i).getClass().getField("className").get(null));
+                        }
+                        eval.append(": ").append(df.format(state.getEvaluation().getFirst()));
+                    } else {
+                        for (int i = 0; i < objectiveFunctions.size(); i++) {
+                            eval.append(" ").append(objectiveFunctions.get(i).getClass().getField("className").get(null)).append(": ").append(df.format(state.getEvaluation().get(i)));
+                        }
+                    }
                     String formattedEval = "Propuesta: " + eval.toString();
-                    prop = new DefaultTreeNode(formattedEval); // Usa tu DefaultTreeNode
+
+                    prop = new DefaultTreeNode(formattedEval);
                     prop.setType("Prop");
                     prop.setExpanded(false);
-                    root.addChild(prop); // En lugar de root.getChildren().add(prop)
+                    root.getChildren().add(prop);
 
                     List<Object> projects = state.getCode();
 
@@ -222,134 +265,281 @@ public class TeamFormationStepThreeImpl implements ITeamFormationStepThreeServic
                         for (Object proj : projects) {
                             ProjectRole projectRole = (ProjectRole) proj;
 
-                            projectNode = new DefaultTreeNode(projectRole.getProject());
+                            projectNode = new DefaultTreeNode(modelMapper.map(projectRole.getProject(), ProjectDTO.ProjectResponseDTO.class));
                             projectNode.setType("P");
                             projectNode.setSelectable(false);
                             projectNode.setExpanded(false);
-                            prop.addChild(projectNode); // En lugar de prop.getChildren().add(projectNode)
+                            prop.getChildren().add(projectNode);
 
-                            // ... (el resto del código similar, usando addChild() en lugar de getChildren().add())
+                            for (RoleWorker pr : projectRole.getRoleWorkers()) {
+                                if (pr != null) {
+                                    roleNode = new DefaultTreeNode(modelMapper.map(pr.getRole(), RoleDTO.RoleResponseDTO.class));
+                                    roleNode.setType("R");
+                                    roleNode.setSelectable(false);
+                                    roleNode.setExpanded(true);
+                                    projectNode.getChildren().add(roleNode);
+
+                                    pr.getWorkers().addAll(pr.getFixedWorkers());
+                                    for (PersonEntity p : pr.getWorkers()) {
+                                        if (p != null) {
+                                            personNode = new DefaultTreeNode(modelMapper.map(p, PersonDTO.PersonResponseDTO.class));
+                                            personNode.setType("W");
+                                            personNode.setSelectable(true);
+                                            personNode.setExpanded(true);
+                                            roleNode.getChildren().add(personNode);
+                                        }
+                                    }
+                                }
+                            }
                         }
                     }
                 }
             }
         }
+
         return root;
     }
 
-    public boolean ensureGeneralFactorWeightSummatory(TeamFormationParameters parameters) {
-//        boolean isOk = true;
-//        float weight = 0;
-//
-//        if (parameters.isMaxCompetences()) {
-//            weight +=  competenceWeight;
-//        }
-//        if (parameters.isTakeWorkLoad()) {
-//            weight += workLoadWeight;
-//        }
-//        if (parameters.isMinCostDistance()) {
-//            weight += costDistanceWeight;
-//        }
-//        if (parameters.isMaxInterests()) {
-//            weight += interestWeight;
-//        }
-//        if (takeProjectInterests) {
-//            weight += projectInterestWeight;
-//        }
-//        if (takeSynergy) {
-//            weight += synergyWeight;
-//        }
-//        if (takeBelbin) {
-//            weight += belbinWeight;
-//        }
-//        if (takeMbtiTypes) {
-//            weight += mbtiWeight;
-//        }
-//        if (takeMultiroleTeamMembers) {
-//            weight += multiRoleTeamMembersWeight;
-//        }
-//        if (homogeneousTeams) {
-//            weight += homogeneousTeamsWeight;
-//        }
-//        if (heterogeneousTeams) {
-//            weight += heterogeneousTeamsWeight;
-//        }
-//        if (takeHomogeneousSex) {
-//            weight += homogeneousSexWeight;
-//        }
-//        if (takeHeterogeneusSex) {
-//            weight += heterogeneusSexWeight;
-//        }
-//        if (balanceCompetences) {
-//            weight += balanceCompetenceWeight;
-//        }
-//        if (balanceWorkLoad) {
-//            weight += balanceWorkLoadWeight;
-//        }
-//        if (balanceCostDistance) {
-//            weight += balanceCostDistanceWeight;
-//        }
-//        if (balanceInterests) {
-//            weight += balanceInterestWeight;
-//        }
-//        if (balanceProjectInterests) {
-//            weight += balanceProjectInterestWeight;
-//        }
-//        if (balanceMbtiTypes) {
-//            weight += balanceMbtiTypesWeight;
-//        }
-//        if (balanceSynergy) {
-//            weight += balanceSynergyWeight;
-//        }
-//        if (balanceBelbin) {
-//            weight += balanceBelbinWeight;
-//        }
-//        if (balanceMultiroleTeamMembers) {
-//            weight += balanceMultiRoleTeamMembersWeight;
-//        }
-//        if (balanceMaximizeSexFactor) {
-//            weight += balanceMaximizeSexFactorWeight;
-//        }
-//        if (balanceMinimizeSexFactor) {
-//            weight += balanceMinimizeSexFactorWeight;
-//        }
-//        if (balanceHeterogeneousTeamsNacionalityFactor) {
-//            weight += balanceHeterogeneousTeamsNacionalityFactorWeight;
-//        }
-//        if (balanceHomogeneousTeamsNacionalityFactor) {
-//            weight += balanceHomogeneousTeamsNacionalityFactorWeight;
-//        }
-//        if (takeReligionHeterogeneous) {
-//            weight += religionHeterogeneousWeight;
-//        }
-//        if (takeReligionHomogeneous) {
-//            weight += religionHomogeneousWeight;
-//        }
-//        if (balanceReligionHeterogeneous) {
-//            weight += balanceReligionHeterogeneousWeight;
-//        }
-//        if (balanceReligionHomogeneous) {
-//            weight += balanceReligionHomogeneousWeight;
-//        }
-//        if (takeAgeHeterogeneity) {
-//            weight += ageHeterogeneityWeight;
-//        }
-//        if (takeAgeHomogeneity) {
-//            weight += ageHomogeneityWeight;
-//        }
-//        if (balanceAgeHeterogeneity) {
-//            weight += balanceAgeHeterogeneityWeight;
-//        }
-//        if (balanceAgeHomogeneity) {
-//            weight += balanceAgeHomogeneityWeight;
-//        }
-//
-//        if (weight != 1) {
-//            isOk = false;
-//        }
-//        return isOk;
+    public boolean ensureGeneralFactorWeightSummatory(TeamFormationParameters parametersTeam) {
+        boolean isOk = true;
+        float weight = 0;
 
-        return true;
+        if (parametersTeam.isMaxCompetences()) {
+            weight += parametersTeam.getMaxCompetencesWeight();
+        }
+        if (parametersTeam.isTakeWorkLoad()) {
+            weight += parametersTeam.getWorkLoadWeight();
+        }
+        if (parametersTeam.isMinCostDistance()) {
+            weight += parametersTeam.getMinCostDistanceWeight();
+        }
+        if (parametersTeam.isMaxInterests()) {
+            weight += parametersTeam.getMaxInterestsWeight();
+        }
+        if (parametersTeam.isMaxProjectInterests()) {
+            weight += parametersTeam.getMaxProjectInterestsWeight();
+        }
+        if (parametersTeam.isMinIncomp()) {
+            weight += parametersTeam.getMinIncompWeight();
+        }
+        if (parametersTeam.isMaxBelbinRoles()) {
+            weight += parametersTeam.getMaxBelbinWeight();
+        }
+        if (parametersTeam.isMaxMbtiTypes()) {
+            weight += parametersTeam.getMaxMbtiTypesWeight();
+        }
+        if (parametersTeam.isMaxMultiroleTeamMembers()) {
+            weight += parametersTeam.getMaxMultiroleTeamMembersWeight();
+        }
+        if (parametersTeam.isHomogeneousTeams()) {
+            weight += parametersTeam.getHomogeneousTeamsWeight();
+        }
+        if (parametersTeam.isHeterogeneousTeams()) {
+            weight += parametersTeam.getHeterogeneousTeamsWeight();
+        }
+        if (parametersTeam.isMaxSex()) {
+            weight += parametersTeam.getMaxSexWeight();
+        }
+        if (parametersTeam.isMinSex()) {
+            weight += parametersTeam.getMinSexWeight();
+        }
+        if (parametersTeam.isBalanceCompetences()) {
+            weight += parametersTeam.getBalanceCompetenceWeight();
+        }
+        if (parametersTeam.isBalancePersonWorkload()) {
+            weight += parametersTeam.getBalanceWorkLoadWeight();
+        }
+        if (parametersTeam.isBalanceCostDistance()) {
+            weight += parametersTeam.getBalanceCostDistanceWeight();
+        }
+        if (parametersTeam.isBalanceInterests()) {
+            weight += parametersTeam.getBalanceInterestWeight();
+        }
+        if (parametersTeam.isBalanceProjectInterests()) {
+            weight += parametersTeam.getBalanceProjectInterestWeight();
+        }
+        if (parametersTeam.isBalanceMbtiTypes()) {
+            weight += parametersTeam.getBalanceMbtiTypesWeight();
+        }
+        if (parametersTeam.isBalanceSynergy()) {
+            weight += parametersTeam.getBalanceSynergyWeight();
+        }
+        if (parametersTeam.isBalanceBelbinRoles()) {
+            weight += parametersTeam.getBalanceBelbinWeight();
+        }
+        if (parametersTeam.isBalanceMultiroleTeamMembers()) {
+            weight += parametersTeam.getBalanceMultiroleTeamMembersWeight();
+        }
+        if (parametersTeam.isBalanceMaximizeSexFactor()) {
+            weight += parametersTeam.getBalanceMaximizeSexFactorWeight();
+        }
+        if (parametersTeam.isBalanceMinimizeSexFactor()) {
+            weight += parametersTeam.getBalanceMinimizeSexFactorWeight();
+        }
+        if (parametersTeam.isBalanceHeterogeneousTeams()) {
+            weight += parametersTeam.getBalanceHeterogeneousTeamsNacionalityFactorWeight();
+        }
+        if (parametersTeam.isBalanceHomogeneousTeams()) {
+            weight += parametersTeam.getBalanceHomogeneousTeamsNacionalityFactorWeight();
+        }
+        if (parametersTeam.isMaxReligion()) {
+            weight += parametersTeam.getMaxReligionWeight();
+        }
+        if (parametersTeam.isMinReligion()) {
+            weight += parametersTeam.getMinReligionWeight();
+        }
+        if (parametersTeam.isBalanceMaximizeReligion()) {
+            weight += parametersTeam.getBalanceMaximizeReligionWeight();
+        }
+        if (parametersTeam.isBalanceMinimizeReligion()) {
+            weight += parametersTeam.getBalanceMinimizeReligionWeight();
+        }
+        if (parametersTeam.isMaxAgeHeterogeneity()) {
+            weight += parametersTeam.getMaxAgeHeterogeneityWeight();
+        }
+        if (parametersTeam.isMinAgeHomogeneity()) {
+            weight += parametersTeam.getMinAgeHomogeneityWeight();
+        }
+        if (parametersTeam.isBalanceMaximizeAgeHeterogeneity()) {
+            weight += parametersTeam.getBalanceMaximizeAgeHeterogeneityWeight();
+        }
+        if (parametersTeam.isBalanceMinimizeAgeHomogeneity()) {
+            weight += parametersTeam.getBalanceMinimizeAgeHomogeneityWeight();
+        }
+
+        if (weight != 1) {
+            isOk = false;
+        }
+        return isOk;
+    }
+
+    public List<ProjectEntity> getUnsavedProjects(List<Long> projectsIDs) {
+        List<ProjectEntity> projects = new ArrayList<>();
+
+        List<ProjectEntity> allProjects = projectRepository.findAll();
+        Map<Long, ProjectEntity> projectMap = allProjects.stream()
+                .collect(Collectors.toMap(ProjectEntity::getId, Function.identity()));
+
+        for(Long projectsID : projectsIDs) {
+            ProjectEntity project = projectMap.get(projectsID);
+            projects.add(project);
+        }
+        return projects;
+    }
+
+    public List<ProjectRoleCompetenceTemplate> formatProjects(List<ProjectEntity> unformatedProjects) {
+
+        List<ProjectRoleCompetenceTemplate> formatedProjectList = new ArrayList<>();
+
+        if (!unformatedProjects.isEmpty()) {
+            ProjectRoleCompetenceTemplate prct;
+
+            for (ProjectEntity item : unformatedProjects) { //para cada proyecto
+                CycleEntity lastC = TeamBuilder.lastProjectCycle(item); // obtener ultimo ciclo
+                ProjectStructureEntity structure = lastC.getProjectStructure(); //obtener estructura del ultimo ciclo
+                List<ProjectRolesEntity> projectRoles = structure.getProjectRolesList(); //obtener roles requeridos para desarrollar el proyecto
+                List<ProjectTechCompetenceEntity> techComp = projectTechnicalRequirements(projectRoles); //obtener competencias tecnicas requeridas por el proyecto
+
+                prct = new ProjectRoleCompetenceTemplate();
+                prct.setProject(item);
+                prct.setRoleCompetences(doPCTFormat(projectRoles));//dar formato a las competencias del proyecto
+                formatedProjectList.add(prct); //agregar proyecto con formato prct a la lista
+
+            }
+        }
+        return formatedProjectList;
+    }
+
+    public List<ProjectTechCompetenceEntity> projectTechnicalRequirements(List<ProjectRolesEntity> projectRoles) {
+        List<ProjectTechCompetenceEntity> out = new ArrayList<>();
+
+        for (ProjectRolesEntity projectRole : projectRoles) {
+            out.addAll(projectRole.getProjectTechCompetenceList());
+        }
+
+        return out;
+    }
+
+    public List<ProjectCompetenceTemplate> doPCTFormat(List<ProjectRolesEntity> projectRoles) {
+        List<ProjectCompetenceTemplate> pctList = new ArrayList<>();
+
+        ProjectCompetenceTemplate projectCT;
+        for (ProjectRolesEntity prole : projectRoles) {  //para cada rol de proyectos
+            projectCT = new ProjectCompetenceTemplate();
+            projectCT.setRole(prole.getRole()); //declarar rol del ProjectCompetenceTemplate
+
+            List<RoleCompetitionEntity> roleCompetitionList = prole.getRole().getRoleCompetitionList(); //obtener competencias genericas para el rol
+            List<ProjectTechCompetenceEntity> roleTechCompetenceList = prole.getProjectTechCompetenceList(); //obtener competencias tecnicas para el rol en el proyecto
+
+            List<CompetencesTemplate> genComp = doCTFormat(roleCompetitionList); //dar formato a las competencias genericas
+            List<CompetencesTemplate> techComp = doCTFormat(roleTechCompetenceList);//dar formato a las competencias tecnicas
+
+            projectCT.setGenCompetences(genComp); // asignar competencias con nuevo formato
+            projectCT.setTechCompetences(techComp);
+
+            pctList.add(projectCT);
+        }
+
+        return pctList;
+    }
+
+    public List<CompetencesTemplate> doCTFormat(List competences) {
+        List<CompetencesTemplate> compTemplateList = new ArrayList<>();
+
+        CompetencesTemplate cTemplate;
+
+        for (Object item : competences) { //para cada competencia
+            cTemplate = new CompetencesTemplate();
+
+            if (item instanceof RoleCompetitionEntity) { //se obtienen competencias genericas
+                cTemplate.setCompetence(((RoleCompetitionEntity) item).getCompetence());
+                cTemplate.setCompetenceImportance(((RoleCompetitionEntity) item).getCompetenceImportance());
+                cTemplate.setMinLevel(((RoleCompetitionEntity) item).getLevel());
+            }
+
+            if (item instanceof ProjectTechCompetenceEntity) {//se obtienen competencias tecnicas
+                cTemplate.setCompetence(((ProjectTechCompetenceEntity) item).getCompetence());
+                cTemplate.setCompetenceImportance(((ProjectTechCompetenceEntity) item).getCompetenceImportance());
+                cTemplate.setMinLevel(((ProjectTechCompetenceEntity) item).getLevel());
+            }
+            compTemplateList.add(cTemplate);
+        }
+
+        return compTemplateList;
+    }
+
+    public ArrayList<PersonEntity> getSearchArea(List<PersonGroupEntity> groups) {
+        ArrayList<PersonEntity> searchArea = new ArrayList<>();
+        List<PersonEntity> source = personRepository.findAll();
+
+        for (PersonEntity item : source) { //para cada persona
+            if (item.getStatus() != null && item.getStatus().equalsIgnoreCase("ACTIVE")) { //si esta activa
+                int i = 0;
+                while (i < groups.size()) // para cada grupo
+                {
+                    if (item.getGroup().equals(groups.get(i))) //si la persona pertenece
+                    {
+                        searchArea.add(item);
+                    }
+                    i++;
+                }
+            }
+
+        }
+        return searchArea;
+    }
+
+    public List<PersonGroupEntity> getGroups(List<Long> groupsIDs) {
+        List<PersonGroupEntity> groups = new ArrayList<>();
+
+        for (Long id : groupsIDs) {
+            PersonGroupEntity group = iPersonGroupRepository.findById(id).
+                    orElseThrow(() -> new RuntimeException("No group found with id " + id));
+
+            groups.add(group);
+        }
+
+        return groups;
     }
 
     public List getRestrictions(TeamFormationParameters parameters) {
@@ -421,7 +611,7 @@ public class TeamFormationStepThreeImpl implements ITeamFormationStepThreeServic
         Strategy.getStrategy().setStopexecute(new StopExecute());
         Strategy.getStrategy().setUpdateparameter(new UpdateParameter());
         Strategy.getStrategy().setProblem(problem);
-        Strategy.getStrategy().calculateTime = Boolean.parseBoolean(ResourceBundle.getBundle("/algorithmConf").getString("calculateTime"));
+        Strategy.getStrategy().calculateTime = Boolean.parseBoolean(ResourceBundle.getBundle("algorithmConf").getString("calculateTime"));
     }
 
     public State prepareSolution() {
@@ -440,7 +630,7 @@ public class TeamFormationStepThreeImpl implements ITeamFormationStepThreeServic
 
         while (i < states.size()) {
             if (Strategy.getStrategy().getProblem().getCodification().validState(states.get(i))) {
-                if (states.get(i).getEvaluation().get(0) > bestState.getEvaluation().get(0)) {
+                if (states.get(i).getEvaluation().getFirst() > bestState.getEvaluation().getFirst()) {
                     bestState = states.get(i);
                 }
             }
@@ -458,8 +648,8 @@ public class TeamFormationStepThreeImpl implements ITeamFormationStepThreeServic
      * @throws java.io.IOException
      */
     public List<State> applyHillClimbing(ProjectRoleState initialSolution, TeamFormationProblem problem) throws IllegalArgumentException, SecurityException, ClassNotFoundException, InstantiationException, IllegalAccessException, InvocationTargetException, NoSuchMethodException, IOException {
-        int EXECUTIONS = Integer.parseInt(ResourceBundle.getBundle("/algorithmConf").getString("executions"));
-        int iterations = Integer.parseInt(ResourceBundle.getBundle("/algorithmConf").getString("iterations"));
+        int EXECUTIONS = Integer.parseInt(ResourceBundle.getBundle("algorithmConf").getString("executions"));
+        int iterations = Integer.parseInt(ResourceBundle.getBundle("algorithmConf").getString("iterations"));
         List<State> sol = null;
         if (initialSolution != null) {
             sol = new ArrayList<>();
@@ -499,8 +689,8 @@ public class TeamFormationStepThreeImpl implements ITeamFormationStepThreeServic
      * @throws java.io.IOException
      */
     public List<State> applyHillClimbingRestart(ProjectRoleState initialSolution, TeamFormationProblem problem) throws IllegalArgumentException, SecurityException, ClassNotFoundException, InstantiationException, IllegalAccessException, InvocationTargetException, NoSuchMethodException, IOException {
-        int EXECUTIONS = Integer.parseInt(ResourceBundle.getBundle("/algorithmConf").getString("executions"));
-        int iterations = Integer.parseInt(ResourceBundle.getBundle("/algorithmConf").getString("iterations"));
+        int EXECUTIONS = Integer.parseInt(ResourceBundle.getBundle("algorithmConf").getString("executions"));
+        int iterations = Integer.parseInt(ResourceBundle.getBundle("algorithmConf").getString("iterations"));
         List<State> sol = null;
         if (initialSolution != null) {
             sol = new ArrayList<>();
@@ -509,7 +699,7 @@ public class TeamFormationStepThreeImpl implements ITeamFormationStepThreeServic
                 configStrategy(problem);
                 Strategy.getStrategy().saveListBestStates = true;
                 Strategy.getStrategy().saveListStates = true;
-                HillClimbingRestart.count = Integer.parseInt(ResourceBundle.getBundle("/algorithmConf").getString("HillClimbingRestartCount"));
+                HillClimbingRestart.count = Integer.parseInt(ResourceBundle.getBundle("algorithmConf").getString("HillClimbingRestartCount"));
 
                 Strategy.getStrategy().executeStrategy(iterations, 1, GeneratorType.HillClimbingRestart);
                 State bestState = Strategy.getStrategy().getBestState();
@@ -541,8 +731,8 @@ public class TeamFormationStepThreeImpl implements ITeamFormationStepThreeServic
      * @throws java.io.IOException
      */
     public List<State> applyRandomSearch(ProjectRoleState initialSolution, TeamFormationProblem problem) throws IllegalArgumentException, SecurityException, ClassNotFoundException, InstantiationException, IllegalAccessException, InvocationTargetException, NoSuchMethodException, IOException {
-        int EXECUTIONS = Integer.parseInt(ResourceBundle.getBundle("/algorithmConf").getString("executions"));
-        int iterations = Integer.parseInt(ResourceBundle.getBundle("/algorithmConf").getString("iterations"));
+        int EXECUTIONS = Integer.parseInt(ResourceBundle.getBundle("algorithmConf").getString("executions"));
+        int iterations = Integer.parseInt(ResourceBundle.getBundle("algorithmConf").getString("iterations"));
         List<State> sol = null;
         if (initialSolution != null) {
             sol = new ArrayList<>();
@@ -579,8 +769,8 @@ public class TeamFormationStepThreeImpl implements ITeamFormationStepThreeServic
      * @throws java.io.IOException
      */
     public List<State> applyTabuSearch(ProjectRoleState initialSolution, TeamFormationProblem problem) throws IllegalArgumentException, SecurityException, ClassNotFoundException, InstantiationException, IllegalAccessException, InvocationTargetException, NoSuchMethodException, IOException {
-        int EXECUTIONS = Integer.parseInt(ResourceBundle.getBundle("/algorithmConf").getString("executions"));
-        int iterations = Integer.parseInt(ResourceBundle.getBundle("/algorithmConf").getString("iterations"));
+        int EXECUTIONS = Integer.parseInt(ResourceBundle.getBundle("algorithmConf").getString("executions"));
+        int iterations = Integer.parseInt(ResourceBundle.getBundle("algorithmConf").getString("iterations"));
         List<State> sol = null;
         if (initialSolution != null) {
             sol = new ArrayList<>();
@@ -589,7 +779,7 @@ public class TeamFormationStepThreeImpl implements ITeamFormationStepThreeServic
                 configStrategy(problem);
                 Strategy.getStrategy().saveListBestStates = true;
                 Strategy.getStrategy().saveListStates = true;
-                TabuSolutions.maxelements = Integer.parseInt(ResourceBundle.getBundle("/algorithmConf").getString("TabuSolutionsMaxelements"));
+                TabuSolutions.maxelements = Integer.parseInt(ResourceBundle.getBundle("algorithmConf").getString("TabuSolutionsMaxelements"));
 
                 Strategy.getStrategy().executeStrategy(iterations, 1, GeneratorType.TabuSearch);
                 State bestState = Strategy.getStrategy().getBestState();
@@ -622,8 +812,8 @@ public class TeamFormationStepThreeImpl implements ITeamFormationStepThreeServic
         List<State> sol = null;
         if (initialSolution != null) {
 
-            int iterations = Integer.parseInt(ResourceBundle.getBundle("/algorithmConf").getString("iterations"));
-            int executions = Integer.parseInt(ResourceBundle.getBundle("/algorithmConf").getString("executions"));
+            int iterations = Integer.parseInt(ResourceBundle.getBundle("algorithmConf").getString("iterations"));
+            int executions = Integer.parseInt(ResourceBundle.getBundle("algorithmConf").getString("executions"));
             for (int i = 0; i < executions; i++) {
                 //RS,RE,RL,EE,GA,BT,BA,ECR,EDA,EC,LU
                 configurePA(iterations, false, false, false, false, false, true, true, true, false, true, false);
@@ -647,8 +837,8 @@ public class TeamFormationStepThreeImpl implements ITeamFormationStepThreeServic
     //NSGAII
 
     private List<State> applyNSGAII(ProjectRoleState initialSolution, TeamFormationProblem problem) {
-        int ITERATIONS = Integer.parseInt(ResourceBundle.getBundle("/algorithmConf").getString("iterations"));
-        int EXECUTIONS = Integer.parseInt(ResourceBundle.getBundle("/algorithmConf").getString("executions"));
+        int ITERATIONS = Integer.parseInt(ResourceBundle.getBundle("algorithmConf").getString("iterations"));
+        int EXECUTIONS = Integer.parseInt(ResourceBundle.getBundle("algorithmConf").getString("executions"));
         List<State> sol = null;
         if (initialSolution != null) {
             sol = new ArrayList<>();
@@ -657,14 +847,14 @@ public class TeamFormationStepThreeImpl implements ITeamFormationStepThreeServic
                 //Configurar el algoritmo dentro del BiCIAM
                 Strategy.getStrategy().setStopexecute(new StopExecute());
                 Strategy.getStrategy().setUpdateparameter(new UpdateParameter());
-                NSGAII.countRef = Integer.parseInt(ResourceBundle.getBundle("/algorithmConf").getString("CountRef")); //Cantidad de individuos
+                NSGAII.countRef = Integer.parseInt(ResourceBundle.getBundle("algorithmConf").getString("CountRef")); //Cantidad de individuos
                 NSGAII.selectionType = SelectionType.TournamentSelection;
 
                 NSGAII.crossoverType = CrossoverType.GenericCrossover;
                 NSGAII.mutationType = MutationType.GenericMutation;
                 Strategy.getStrategy().calculateTime = true;
-                NSGAII.PM = Float.parseFloat(ResourceBundle.getBundle("/algorithmConf").getString("PM"));
-                NSGAII.PC = Float.parseFloat(ResourceBundle.getBundle("/algorithmConf").getString("PC"));
+                NSGAII.PM = Float.parseFloat(ResourceBundle.getBundle("algorithmConf").getString("PM"));
+                NSGAII.PC = Float.parseFloat(ResourceBundle.getBundle("algorithmConf").getString("PC"));
 
                 try {
                     Strategy.getStrategy().executeStrategy(ITERATIONS, 1, GeneratorType.RandomSearch);
@@ -696,8 +886,8 @@ public class TeamFormationStepThreeImpl implements ITeamFormationStepThreeServic
     //MCMOSA
     public List<State> applyMCMOSA(ProjectRoleState initialSolution, TeamFormationProblem problem) {
 
-        int EXECUTIONS = Integer.parseInt(ResourceBundle.getBundle("/algorithmConf").getString("executions"));
-        int iterations = Integer.parseInt(ResourceBundle.getBundle("/algorithmConf").getString("iterations"));
+        int EXECUTIONS = Integer.parseInt(ResourceBundle.getBundle("algorithmConf").getString("executions"));
+        int iterations = Integer.parseInt(ResourceBundle.getBundle("algorithmConf").getString("iterations"));
         List<State> sol = null;
         if (initialSolution != null) {
             sol = new ArrayList<>();
@@ -711,7 +901,7 @@ public class TeamFormationStepThreeImpl implements ITeamFormationStepThreeServic
                 MultiCaseSimulatedAnnealing.alpha = 0.9;
                 MultiCaseSimulatedAnnealing.tfinal = 0.0;
                 MultiCaseSimulatedAnnealing.tinitial = 20.0;
-                String format = ResourceBundle.getBundle("/algorithmConf").getString("decimalFormat");
+                String format = ResourceBundle.getBundle("algorithmConf").getString("decimalFormat");
                 DecimalFormat df = new DecimalFormat(format);
 
                 try {
@@ -745,8 +935,8 @@ public class TeamFormationStepThreeImpl implements ITeamFormationStepThreeServic
     //UMOSA
     public List<State> applyUMOSA(ProjectRoleState initialSolution, TeamFormationProblem problem) {
 
-        int EXECUTIONS = Integer.parseInt(ResourceBundle.getBundle("/algorithmConf").getString("executions"));
-        int iterations = Integer.parseInt(ResourceBundle.getBundle("/algorithmConf").getString("iterations"));
+        int EXECUTIONS = Integer.parseInt(ResourceBundle.getBundle("algorithmConf").getString("executions"));
+        int iterations = Integer.parseInt(ResourceBundle.getBundle("algorithmConf").getString("iterations"));
         List<State> sol = null;
         if (initialSolution != null) {
             sol = new ArrayList<>();
@@ -759,7 +949,7 @@ public class TeamFormationStepThreeImpl implements ITeamFormationStepThreeServic
                 UMOSA.alpha = 0.9;
                 UMOSA.tfinal = 0.0;
                 UMOSA.tinitial = 20.0;
-                String format = ResourceBundle.getBundle("/algorithmConf").getString("decimalFormat");
+                String format = ResourceBundle.getBundle("algorithmConf").getString("decimalFormat");
                 DecimalFormat df = new DecimalFormat(format);
 
                 try {
@@ -791,8 +981,8 @@ public class TeamFormationStepThreeImpl implements ITeamFormationStepThreeServic
     //*Mogaaa
 
     public List<State> applyMOGA(ProjectRoleState initialSolution, TeamFormationProblem problem) throws IllegalArgumentException, SecurityException, ClassNotFoundException, InstantiationException, IllegalAccessException, InvocationTargetException, NoSuchMethodException, IOException, NoSuchFieldException {
-        int ITERATIONS = Integer.parseInt(ResourceBundle.getBundle("/algorithmConf").getString("iterations"));
-        int EXECUTIONS = Integer.parseInt(ResourceBundle.getBundle("/algorithmConf").getString("executions"));
+        int ITERATIONS = Integer.parseInt(ResourceBundle.getBundle("algorithmConf").getString("iterations"));
+        int EXECUTIONS = Integer.parseInt(ResourceBundle.getBundle("algorithmConf").getString("executions"));
         List<State> sol = null;
         if (initialSolution != null) {
             sol = new ArrayList<>();
@@ -801,14 +991,14 @@ public class TeamFormationStepThreeImpl implements ITeamFormationStepThreeServic
                 //Configurar el algoritmo dentro del BiCIAM
                 Strategy.getStrategy().setStopexecute(new StopExecute());
                 Strategy.getStrategy().setUpdateparameter(new UpdateParameter());
-                MOGA.countRef = 100;//Integer.valueOf(ResourceBundle.getBundle("/algorithmConf").getString("CountRef")); //Cantidad de individuos
+                MOGA.countRef = Integer.valueOf(ResourceBundle.getBundle("algorithmConf").getString("CountRef")); //Cantidad de individuos
                 MOGA.selectionType = SelectionType.TournamentSelection;
                 MOGA.crossoverType = CrossoverType.GenericCrossover;
                 MOGA.mutationType = MutationType.GenericMutation;
                 MOGA.replaceType = ReplaceType.GenerationalReplace;
                 Strategy.getStrategy().calculateTime = true;
-                MOGA.PM = Float.parseFloat(ResourceBundle.getBundle("/algorithmConf").getString("PM"));
-                MOGA.PC = Float.parseFloat(ResourceBundle.getBundle("/algorithmConf").getString("PC"));
+                MOGA.PM = Float.parseFloat(ResourceBundle.getBundle("algorithmConf").getString("PM"));
+                MOGA.PC = Float.parseFloat(ResourceBundle.getBundle("algorithmConf").getString("PC"));
                 try {
                     Strategy.getStrategy().executeStrategy(ITERATIONS, 1, GeneratorType.RandomSearch);
                 } catch (IllegalArgumentException | SecurityException | ClassNotFoundException | InstantiationException | IllegalAccessException | InvocationTargetException | NoSuchMethodException ex) {
@@ -838,8 +1028,8 @@ public class TeamFormationStepThreeImpl implements ITeamFormationStepThreeServic
 
     public List<State> applySimulatedAnnealing(ProjectRoleState initialSolution, TeamFormationProblem problem) throws IllegalArgumentException, SecurityException, ClassNotFoundException, InstantiationException, IllegalAccessException, InvocationTargetException, NoSuchMethodException, IOException, NoSuchFieldException {
 
-        int EXECUTIONS = Integer.parseInt(ResourceBundle.getBundle("/algorithmConf").getString("executions"));
-        int iterations = Integer.parseInt(ResourceBundle.getBundle("/algorithmConf").getString("iterations"));
+        int EXECUTIONS = Integer.parseInt(ResourceBundle.getBundle("algorithmConf").getString("executions"));
+        int iterations = Integer.parseInt(ResourceBundle.getBundle("algorithmConf").getString("iterations"));
         List<State> sol = null;
         if (initialSolution != null) {
             sol = new ArrayList<>();
@@ -934,7 +1124,7 @@ public class TeamFormationStepThreeImpl implements ITeamFormationStepThreeServic
         }
         if (BT) {
             TabuSearch ts = new TabuSearch();
-            TabuSolutions.maxelements = Integer.parseInt(ResourceBundle.getBundle("/algorithmConf").getString("TabuSolutionsMaxelements"));
+            TabuSolutions.maxelements = Integer.parseInt(ResourceBundle.getBundle("algorithmConf").getString("TabuSolutionsMaxelements"));
             gene.add(ts);
         }
         if (EC) {
@@ -947,7 +1137,7 @@ public class TeamFormationStepThreeImpl implements ITeamFormationStepThreeServic
         }
         if (ECR) {
             HillClimbingRestart hcr = new HillClimbingRestart();
-            hcr.count = Integer.parseInt(ResourceBundle.getBundle("/algorithmConf").getString("HillClimbingRestartCount"));
+            hcr.count = Integer.parseInt(ResourceBundle.getBundle("algorithmConf").getString("HillClimbingRestartCount"));
             gene.add(hcr);
         }
         MultiGenerator.setListGenerators(gene);
@@ -955,8 +1145,8 @@ public class TeamFormationStepThreeImpl implements ITeamFormationStepThreeServic
 
     public List<State> applyMultiobjectiveAlgorithmsBriefcase(ProjectRoleState initialSolution, TeamFormationProblem problem) throws IOException, IllegalArgumentException, ClassNotFoundException, NoSuchMethodException, IllegalAccessException, SecurityException, InstantiationException, InvocationTargetException, Exception {
         List<State> noDominadas = new ArrayList<State>();
-        int iterations = Integer.parseInt(ResourceBundle.getBundle("/algorithmConf").getString("iterations"));
-        int executions = Integer.parseInt(ResourceBundle.getBundle("/algorithmConf").getString("executions"));
+        int iterations = Integer.parseInt(ResourceBundle.getBundle("algorithmConf").getString("iterations"));
+        int executions = Integer.parseInt(ResourceBundle.getBundle("algorithmConf").getString("executions"));
         String fichero = "multiAlgorithmsBriefcase.txt";
         for (int i = 0; i < executions; i++) {
             //Configurar el algoritmo, dentro de BiCIAM
@@ -1058,8 +1248,8 @@ public class TeamFormationStepThreeImpl implements ITeamFormationStepThreeServic
 
     public List<State> GA(ProjectRoleState initialSolution, TeamFormationProblem problem) throws ClassNotFoundException, InvocationTargetException, InstantiationException, NoSuchMethodException, IllegalAccessException {
 
-        int ITERATIONS = Integer.parseInt(ResourceBundle.getBundle("/algorithmConf").getString("iterations"));
-        int EXECUTIONS = Integer.parseInt(ResourceBundle.getBundle("/algorithmConf").getString("executions"));
+        int ITERATIONS = Integer.parseInt(ResourceBundle.getBundle("algorithmConf").getString("iterations"));
+        int EXECUTIONS = Integer.parseInt(ResourceBundle.getBundle("algorithmConf").getString("executions"));
 
         List<State> sol = null;
         if (initialSolution != null) {
@@ -1075,14 +1265,14 @@ public class TeamFormationStepThreeImpl implements ITeamFormationStepThreeServic
 
                 //Configuracion del algoritmo genetico
                 //cantidad de individuos
-                GeneticAlgorithm.countRef = Integer.parseInt(ResourceBundle.getBundle("/algorithmConf").getString("CountRef"));
+                GeneticAlgorithm.countRef = Integer.parseInt(ResourceBundle.getBundle("algorithmConf").getString("CountRef"));
                 //Probabilidad de cruzamiento o combinacion
-                GeneticAlgorithm.PC = Float.parseFloat(ResourceBundle.getBundle("/algorithmConf").getString("PC"));
+                GeneticAlgorithm.PC = Float.parseFloat(ResourceBundle.getBundle("algorithmConf").getString("PC"));
                 //Probabilidad de mutacion
-                GeneticAlgorithm.PM = Float.parseFloat(ResourceBundle.getBundle("/algorithmConf").getString("PM"));
+                GeneticAlgorithm.PM = Float.parseFloat(ResourceBundle.getBundle("algorithmConf").getString("PM"));
 
                 GeneticAlgorithm.selectionType = SelectionType.TournamentSelection;
-                GeneticAlgorithm.truncation = Integer.parseInt(ResourceBundle.getBundle("/algorithmConf").getString("GeneticAlgorithmTruncation"));
+                GeneticAlgorithm.truncation = Integer.parseInt(ResourceBundle.getBundle("algorithmConf").getString("GeneticAlgorithmTruncation"));
                 GeneticAlgorithm.crossoverType = CrossoverType.GenericCrossover;
                 GeneticAlgorithm.mutationType = MutationType.GenericMutation;
                 GeneticAlgorithm.replaceType = ReplaceType.SteadyStateReplace;
@@ -1155,8 +1345,8 @@ public class TeamFormationStepThreeImpl implements ITeamFormationStepThreeServic
      */
     public List<State> applyMultiobjectiveStochasticHC(ProjectRoleState initialSolution, TeamFormationProblem problem) throws IOException {
 
-        int EXECUTIONS = Integer.parseInt(ResourceBundle.getBundle("/algorithmConf").getString("executions"));
-        int iterations = Integer.parseInt(ResourceBundle.getBundle("/algorithmConf").getString("iterations"));
+        int EXECUTIONS = Integer.parseInt(ResourceBundle.getBundle("algorithmConf").getString("executions"));
+        int iterations = Integer.parseInt(ResourceBundle.getBundle("algorithmConf").getString("iterations"));
         List<State> sol = null;
         if (initialSolution != null) {
             sol = new ArrayList<>();
@@ -1206,8 +1396,8 @@ public class TeamFormationStepThreeImpl implements ITeamFormationStepThreeServic
      */
     public List<State> applyMultiobjectiveHCRestart(ProjectRoleState initialSolution, TeamFormationProblem problem) throws IOException {
 
-        int EXECUTIONS = Integer.parseInt(ResourceBundle.getBundle("/algorithmConf").getString("executions"));
-        int iterations = Integer.parseInt(ResourceBundle.getBundle("/algorithmConf").getString("iterations"));
+        int EXECUTIONS = Integer.parseInt(ResourceBundle.getBundle("algorithmConf").getString("executions"));
+        int iterations = Integer.parseInt(ResourceBundle.getBundle("algorithmConf").getString("iterations"));
 
         List<State> sol = null;
         if (initialSolution != null) {
@@ -1218,7 +1408,7 @@ public class TeamFormationStepThreeImpl implements ITeamFormationStepThreeServic
                 Strategy.getStrategy().saveListBestStates = true;
                 Strategy.getStrategy().saveListStates = true;
                 Strategy.getStrategy().saveFreneParetoMonoObjetivo = true;
-                MultiobjectiveHillClimbingRestart.sizeNeighbors = Integer.parseInt(ResourceBundle.getBundle("/algorithmConf").getString("MultiobjectiveHCRestartSizeNeighbors"));
+                MultiobjectiveHillClimbingRestart.sizeNeighbors = Integer.parseInt(ResourceBundle.getBundle("algorithmConf").getString("MultiobjectiveHCRestartSizeNeighbors"));
 
                 try {
                     Strategy.getStrategy().executeStrategy(iterations, 1, GeneratorType.MultiobjectiveHillClimbingRestart);
@@ -1257,8 +1447,8 @@ public class TeamFormationStepThreeImpl implements ITeamFormationStepThreeServic
      * @throws java.io.IOException
      */
     public List<State> applyMultiobjectiveHCDistance(ProjectRoleState initialSolution, TeamFormationProblem problem) throws IOException {
-        int EXECUTIONS = Integer.parseInt(ResourceBundle.getBundle("/algorithmConf").getString("executions"));
-        int iterations = Integer.parseInt(ResourceBundle.getBundle("/algorithmConf").getString("iterations"));
+        int EXECUTIONS = Integer.parseInt(ResourceBundle.getBundle("algorithmConf").getString("executions"));
+        int iterations = Integer.parseInt(ResourceBundle.getBundle("algorithmConf").getString("iterations"));
         List<State> sol = null;
         if (initialSolution != null) {
             sol = new ArrayList<>();
@@ -1267,7 +1457,7 @@ public class TeamFormationStepThreeImpl implements ITeamFormationStepThreeServic
                 Strategy.getStrategy().saveListBestStates = true;
                 Strategy.getStrategy().saveListStates = true;
                 Strategy.getStrategy().saveFreneParetoMonoObjetivo = true;
-                MultiobjectiveHillClimbingDistance.sizeNeighbors = Integer.parseInt(ResourceBundle.getBundle("/algorithmConf").getString("MultiobjectiveHCDistanceSizeNeighbors"));
+                MultiobjectiveHillClimbingDistance.sizeNeighbors = Integer.parseInt(ResourceBundle.getBundle("algorithmConf").getString("MultiobjectiveHCDistanceSizeNeighbors"));
 
                 try {
                     Strategy.getStrategy().executeStrategy(iterations, 1, GeneratorType.MultiobjectiveHillClimbingDistance);
@@ -1298,8 +1488,8 @@ public class TeamFormationStepThreeImpl implements ITeamFormationStepThreeServic
     }
 
     public List<State> applyMultiobjectiveTabuSearch(ProjectRoleState initialSolution, TeamFormationProblem problem) throws IOException {
-        int EXECUTIONS = Integer.parseInt(ResourceBundle.getBundle("/algorithmConf").getString("executions"));
-        int iterations = Integer.parseInt(ResourceBundle.getBundle("/algorithmConf").getString("iterations"));
+        int EXECUTIONS = Integer.parseInt(ResourceBundle.getBundle("algorithmConf").getString("executions"));
+        int iterations = Integer.parseInt(ResourceBundle.getBundle("algorithmConf").getString("iterations"));
         List<State> sol = null;
         if (initialSolution != null) {
             sol = new ArrayList<>();
@@ -1308,8 +1498,8 @@ public class TeamFormationStepThreeImpl implements ITeamFormationStepThreeServic
                 Strategy.getStrategy().saveListBestStates = true;
                 Strategy.getStrategy().saveListStates = true;
                 Strategy.getStrategy().saveFreneParetoMonoObjetivo = true;
-                TabuSolutions.maxelements = Integer.parseInt(ResourceBundle.getBundle("/algorithmConf").getString("MultiobjectiveTabuSolutionsMaxelements"));
-                String format = ResourceBundle.getBundle("/algorithmConf").getString("decimalFormat");
+                TabuSolutions.maxelements = Integer.parseInt(ResourceBundle.getBundle("algorithmConf").getString("MultiobjectiveTabuSolutionsMaxelements"));
+                String format = ResourceBundle.getBundle("algorithmConf").getString("decimalFormat");
                 DecimalFormat df = new DecimalFormat(format);
 
                 try {

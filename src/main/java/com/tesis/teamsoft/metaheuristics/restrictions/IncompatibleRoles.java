@@ -96,7 +96,7 @@ public class IncompatibleRoles extends Constrain {
         List<Long> personRolA = new ArrayList<>();
         List<Long> personRolB = new ArrayList<>();
         Random generator = new Random();
-        int cantIntentos = Integer.parseInt(ResourceBundle.getBundle("/algorithmConf").getString("cantIntentos"));
+        int cantIntentos = Integer.parseInt(ResourceBundle.getBundle("algorithmConf").getString("cantIntentos"));
         boolean meet;
 
         TeamFormationCodification codification = (TeamFormationCodification) Strategy.getStrategy().getProblem().getCodification();

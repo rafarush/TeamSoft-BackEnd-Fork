@@ -121,7 +121,7 @@ public class PersonPerGroupAssigned extends Constrain {
         ProjectRole projectRole = (ProjectRole) state.getCode().get(posProy);
         List<RoleWorker> roleWorkers = projectRole.getRoleWorkers();
         List<PersonEntity> projectWorkers = personasProyecto(projectRole);
-        int cantIntentos = Integer.parseInt(ResourceBundle.getBundle("/algorithmConf").getString("cantIntentos"));
+        int cantIntentos = Integer.parseInt(ResourceBundle.getBundle("algorithmConf").getString("cantIntentos"));
         if (cantIntentos < cant)
             cantIntentos = cant;
         int j = 0, c = 0;

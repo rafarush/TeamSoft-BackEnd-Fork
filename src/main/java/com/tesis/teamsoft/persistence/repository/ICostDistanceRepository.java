@@ -22,4 +22,6 @@ public interface ICostDistanceRepository extends JpaRepository<CostDistanceEntit
     boolean existsByCountyPairExcludingId(@Param("countyAId") Long countyAId,
                                           @Param("countyBId") Long countyBId,
                                           @Param("excludeId") Long excludeId);
+
+    CostDistanceEntity findFirstByOrderByCostDistanceDesc();
 }

@@ -372,7 +372,7 @@ public class TeamFormationCodification extends Codification {
     public void repareIndividualRestrictionsState(State state) {
 
         ArrayList<Object> projects = state.getCode();
-        int cantIntentos = Integer.parseInt(ResourceBundle.getBundle("/algorithmConf").getString("cantIntentos"));
+        int cantIntentos = Integer.parseInt(ResourceBundle.getBundle("algorithmConf").getString("cantIntentos"));
 
         ArrayList<PersonEntity> peopleSol = new ArrayList<>(); //lista de todas las presonas de la solucion
         ArrayList<PersonEntity> peopleSol2 = new ArrayList<>(); //lista de todas las presonas de la solucion asignadas antes de un rol y proyecto especifico
@@ -746,7 +746,7 @@ public class TeamFormationCodification extends Codification {
         List<Object> projects = state.getCode(); // obtener lista de proyectos -roles
         int personCount = 0; //contador de personas con rol cerebro
         int i = 0;
-        int cantIntentos = Integer.parseInt(ResourceBundle.getBundle("/algorithmConf").getString("cantIntentos"));
+        int cantIntentos = Integer.parseInt(ResourceBundle.getBundle("algorithmConf").getString("cantIntentos"));
 
         while (i < projects.size()) { //para cada projecto-rol
             ProjectRole projectRole = (ProjectRole) projects.get(i);
