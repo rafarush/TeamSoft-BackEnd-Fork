@@ -11,6 +11,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.*;
+import java.util.function.Function;
 import java.util.stream.Collectors;
 
 @Service
@@ -80,8 +81,21 @@ public class PersonServiceImpl implements IPersonService {
 
         try {
             // Actualizar campos básicos
-            existingPerson = modelMapper.map(personDTO, PersonEntity.class);
+           // existingPerson = modelMapper.map(personDTO, PersonEntity.class);
             existingPerson.setId(id);
+            existingPerson.setAddress(personDTO.getAddress());
+            existingPerson.setBirthDate(personDTO.getBirthDate());
+            existingPerson.setEmail(personDTO.getEmail());
+            existingPerson.setExperience(personDTO.getExperience());
+            existingPerson.setCard(personDTO.getCard());
+            existingPerson.setInDate(personDTO.getInDate());
+            existingPerson.setPersonName(personDTO.getPersonName());
+            existingPerson.setPhone(personDTO.getPhone());
+            existingPerson.setSex(personDTO.getSex());
+            existingPerson.setStatus(personDTO.getStatus());
+            existingPerson.setSurName(personDTO.getSurName());
+            existingPerson.setWorkload(personDTO.getWorkload());
+
 
             // Procesar relaciones simples
             processSimpleRelations(personDTO, existingPerson);
@@ -143,9 +157,6 @@ public class PersonServiceImpl implements IPersonService {
 
         // Verificar si tiene relaciones antes de eliminar
         if (!person.getAssignedRoleList().isEmpty() ||
-                !person.getCompetenceValueList().isEmpty() ||
-                !person.getPersonalInterestsList().isEmpty() ||
-                !person.getPersonalProjectInterestsList().isEmpty() ||
                 !person.getRoleEvaluationList().isEmpty()) {
             throw new IllegalArgumentException("Cannot delete person because it has associated relations");
         }
@@ -247,7 +258,8 @@ public class PersonServiceImpl implements IPersonService {
             }
         }
 
-        person.setCompetenceValueList(finalList);
+        person.getCompetenceValueList().clear();
+        person.getCompetenceValueList().addAll(finalList);
     }
 
     private List<PersonalInterestsEntity> processPersonalInterests(List<PersonDTO.PersonalInterestCreateDTO> personalInterestsDTO, PersonEntity person) {
@@ -285,20 +297,26 @@ public class PersonServiceImpl implements IPersonService {
                 finalList.add(validatedPi);
             }
         }
-
-        person.setPersonalInterestsList(finalList);
+        person.getPersonalInterestsList().clear();
+        person.getPersonalInterestsList().addAll(finalList);
     }
 
     private List<PersonalProjectInterestsEntity> processPersonalProjectInterests(List<PersonDTO.PersonalProjectInterestCreateDTO> projectInterestsDTO, PersonEntity person) {
         Set<Long> processedProjectIds = new HashSet<>();
+
+        List<ProjectEntity> allProjects = projectRepository.findAll();
+        Map<Long, ProjectEntity> projectMap = allProjects.stream()
+                .collect(Collectors.toMap(ProjectEntity::getId, Function.identity()));
 
         return projectInterestsDTO.stream().map(dto -> {
             if (!processedProjectIds.add(dto.getProjectId())) {
                 throw new IllegalArgumentException("Duplicate project ID: " + dto.getProjectId());
             }
 
-            ProjectEntity project = projectRepository.findById(dto.getProjectId())
-                    .orElseThrow(() -> new RuntimeException("Project not found with ID: " + dto.getProjectId()));
+            ProjectEntity project = projectMap.get(dto.getProjectId());
+            if (project == null) {
+                throw new RuntimeException("Project not found with ID: " + dto.getProjectId());
+            }
 
             PersonalProjectInterestsEntity ppi = new PersonalProjectInterestsEntity();
             ppi.setProject(project);
@@ -324,8 +342,8 @@ public class PersonServiceImpl implements IPersonService {
                 finalList.add(validatedPpi);
             }
         }
-
-        person.setPersonalProjectInterestsList(finalList);
+        person.getPersonalProjectInterestsList().clear();
+        person.getPersonalProjectInterestsList().addAll(finalList);
     }
 
     private PersonTestEntity processPersonTest(PersonDTO.PersonTestCreateDTO personTestDTO, PersonEntity person) {
@@ -379,8 +397,8 @@ public class PersonServiceImpl implements IPersonService {
                 finalList.add(validatedPc);
             }
         }
-
-        person.setPersonConflictList(finalList);
+        person.getPersonConflictList().clear();
+        person.getPersonConflictList().addAll(finalList);
     }
 
     private String generateConflictKey(Long personConflictId, Long conflictIndexId) {
@@ -388,7 +406,20 @@ public class PersonServiceImpl implements IPersonService {
     }
 
     private PersonDTO.PersonResponseDTO convertToResponseDTO(PersonEntity person) {
-        PersonDTO.PersonResponseDTO responseDTO = modelMapper.map(person, PersonDTO.PersonResponseDTO.class);
+        PersonDTO.PersonResponseDTO responseDTO = new PersonDTO.PersonResponseDTO();
+        responseDTO.setId(person.getId());
+        responseDTO.setAddress(person.getAddress());
+        responseDTO.setBirthDate(person.getBirthDate());
+        responseDTO.setEmail(person.getEmail());
+        responseDTO.setExperience(person.getExperience());
+        responseDTO.setCard(person.getCard());
+        responseDTO.setInDate(person.getInDate());
+        responseDTO.setPersonName(person.getPersonName());
+        responseDTO.setPhone(person.getPhone());
+        responseDTO.setSex(person.getSex());
+        responseDTO.setStatus(person.getStatus());
+        responseDTO.setSurName(person.getSurName());
+        responseDTO.setWorkload(person.getWorkload());
 
         // Calcular edad
         responseDTO.setAge(person.getAge());

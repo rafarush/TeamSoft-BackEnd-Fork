@@ -34,7 +34,8 @@ public class PersonGroupServiceImpl implements IPersonGroupService {
                 personGroup.setParentGroup(parentGroup);
             }
 
-            return modelMapper.map(personGroupRepository.save(personGroup), PersonGroupDTO.PersonGroupResponseDTO.class);
+            return convertToResponseDTO(personGroupRepository.save(personGroup));
+            //return modelMapper.map(personGroupRepository.save(personGroup), PersonGroupDTO.PersonGroupResponseDTO.class);
         } catch (Exception e) {
             throw new RuntimeException("Error saving person group: " + e.getMessage());
         }
@@ -128,5 +129,14 @@ public class PersonGroupServiceImpl implements IPersonGroupService {
             }
             current = current.getParentGroup();
         }
+    }
+
+    private PersonGroupDTO.PersonGroupResponseDTO convertToResponseDTO(PersonGroupEntity personGroupEntity) {
+        PersonGroupDTO.PersonGroupResponseDTO dto = new PersonGroupDTO.PersonGroupResponseDTO();
+
+        dto = modelMapper.map(personGroupEntity, PersonGroupDTO.PersonGroupResponseDTO.class);
+        dto.setFather(personGroupEntity.getParentGroup().getName());
+
+        return dto;
     }
 }

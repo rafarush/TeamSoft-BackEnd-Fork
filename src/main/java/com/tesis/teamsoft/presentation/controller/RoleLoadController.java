@@ -7,6 +7,7 @@ import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.validation.BindingResult;
 import org.springframework.web.bind.annotation.*;
 
@@ -21,7 +22,8 @@ public class RoleLoadController {
     @Autowired
     private RoleLoadServiceImpl roleLoadService;
 
-    @RequestMapping(value = "/create_roleLoad", method = RequestMethod.POST)
+    @PostMapping()
+    @PreAuthorize("hasRole('GESTOR_RRHH')")
     public ResponseEntity<?> createRoleLoad(@Valid @RequestBody RoleLoadDTO.RoleLoadCreateDTO roleLoadDTO, BindingResult bindingResult) {
 
         if (bindingResult.hasErrors()) {
@@ -40,7 +42,8 @@ public class RoleLoadController {
         }
     }
 
-    @RequestMapping(value = "/update_roleLoad/{id}", method = RequestMethod.PUT)
+    @PutMapping("/{id}")
+    @PreAuthorize("hasRole('GESTOR_RRHH')")
     public ResponseEntity<?> updateRoleLoad(@Valid @RequestBody RoleLoadDTO.RoleLoadCreateDTO roleLoadDTO,
                                             BindingResult bindingResult,
                                             @PathVariable Long id) {
@@ -65,7 +68,8 @@ public class RoleLoadController {
         }
     }
 
-    @RequestMapping(value = "/delete_roleLoad/{id}", method = RequestMethod.DELETE)
+    @DeleteMapping("/{id}")
+    @PreAuthorize("hasRole('GESTOR_RRHH')")
     public ResponseEntity<?> deleteRoleLoad(@PathVariable Long id) {
         try {
             return new ResponseEntity<>(roleLoadService.deleteRoleLoad(id), HttpStatus.OK);
@@ -80,7 +84,8 @@ public class RoleLoadController {
         }
     }
 
-    @RequestMapping(value = "/findAll_roleLoad", method = RequestMethod.GET)
+    @GetMapping()
+    @PreAuthorize("hasRole('GESTOR_RRHH')")
     public ResponseEntity<?> findAllRoleLoad() {
         try {
             return new ResponseEntity<>(roleLoadService.findAllByOrderByIdAsc(), HttpStatus.OK);
@@ -91,7 +96,8 @@ public class RoleLoadController {
         }
     }
 
-    @RequestMapping(value = "/findByID_roleLoad/{id}", method = RequestMethod.GET)
+    @GetMapping("/{id}")
+    @PreAuthorize("hasRole('GESTOR_RRHH')")
     public ResponseEntity<?> findRoleLoadById(@PathVariable Long id) {
         try {
             return new ResponseEntity<>(roleLoadService.findRoleLoadById(id), HttpStatus.OK);

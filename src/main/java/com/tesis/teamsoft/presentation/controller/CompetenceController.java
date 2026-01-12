@@ -7,6 +7,7 @@ import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.validation.BindingResult;
 import org.springframework.web.bind.annotation.*;
 
@@ -21,7 +22,8 @@ public class CompetenceController {
     @Autowired
     private CompetenceServiceImpl competenceService;
 
-    @RequestMapping(value = "/create_competence", method = RequestMethod.POST)
+    @PostMapping()
+    @PreAuthorize("hasRole('GESTOR_RRHH')")
     public ResponseEntity<?> createCompetence(@Valid @RequestBody CompetenceDTO.CompetenceCreateDTO competenceDTO,
                                               BindingResult bindingResult) {
         if (bindingResult.hasErrors()) {
@@ -32,7 +34,7 @@ public class CompetenceController {
             return new ResponseEntity<>(errors, HttpStatus.BAD_REQUEST);
         }
 
-        try{
+        try {
             return new ResponseEntity<>(competenceService.saveCompetence(competenceDTO), HttpStatus.CREATED);
         } catch (RuntimeException e) {
             Map<String, String> error = new HashMap<>();
@@ -45,7 +47,8 @@ public class CompetenceController {
         }
     }
 
-    @RequestMapping(value = "/update_competence/{id}", method = RequestMethod.PUT)
+    @PutMapping("/{id}")
+    @PreAuthorize("hasRole('GESTOR_RRHH')")
     public ResponseEntity<?> updateCompetence(@Valid @RequestBody CompetenceDTO.CompetenceCreateDTO competenceDTO,
                                               BindingResult bindingResult,
                                               @PathVariable Long id) {
@@ -70,7 +73,8 @@ public class CompetenceController {
         }
     }
 
-    @RequestMapping(value = "/delete_competence/{id}", method = RequestMethod.DELETE)
+    @DeleteMapping("/{id}")
+    @PreAuthorize("hasRole('GESTOR_RRHH')")
     public ResponseEntity<?> deleteCompetence(@PathVariable Long id) {
         try {
             return new ResponseEntity<>(competenceService.deleteCompetence(id), HttpStatus.OK);
@@ -85,7 +89,8 @@ public class CompetenceController {
         }
     }
 
-    @RequestMapping(value = "/findAll_competence", method = RequestMethod.GET)
+    @GetMapping()
+    @PreAuthorize("hasRole('GESTOR_RRHH')")
     public ResponseEntity<?> findAllCompetence() {
         try {
             return new ResponseEntity<>(competenceService.findAllByOrderByIdAsc(), HttpStatus.OK);
@@ -96,7 +101,8 @@ public class CompetenceController {
         }
     }
 
-    @RequestMapping(value = "/findByID_competence/{id}", method = RequestMethod.GET)
+    @GetMapping("/{id}")
+    @PreAuthorize("hasRole('GESTOR_RRHH')")
     public ResponseEntity<?> findCompetenceById(@PathVariable Long id) {
         try {
             return new ResponseEntity<>(competenceService.findCompetenceById(id), HttpStatus.OK);

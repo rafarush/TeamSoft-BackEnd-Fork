@@ -7,6 +7,7 @@ import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.validation.BindingResult;
 import org.springframework.web.bind.annotation.*;
 
@@ -21,7 +22,8 @@ public class CompetenceImportanceController {
     @Autowired
     private CompetenceImportanceServiceImpl competenceImportanceService;
 
-    @RequestMapping(value = "/create_competenceImportance", method = RequestMethod.POST)
+    @PostMapping()
+    @PreAuthorize("hasRole('GESTOR_RRHH')")
     public ResponseEntity<?> createCompetenceImportance(
             @Valid @RequestBody CompetenceImportanceDTO.CompetenceImportanceCreateDTO competenceImportanceDTO,
             BindingResult bindingResult) {
@@ -43,7 +45,8 @@ public class CompetenceImportanceController {
         }
     }
 
-    @RequestMapping(value = "/update_competenceImportance/{id}", method = RequestMethod.PUT)
+    @PutMapping("/{id}")
+    @PreAuthorize("hasRole('GESTOR_RRHH')")
     public ResponseEntity<?> updateCompetenceImportance(
             @Valid @RequestBody CompetenceImportanceDTO.CompetenceImportanceCreateDTO competenceImportanceDTO,
             BindingResult bindingResult,
@@ -70,7 +73,8 @@ public class CompetenceImportanceController {
         }
     }
 
-    @RequestMapping(value = "/delete_competenceImportance/{id}", method = RequestMethod.DELETE)
+    @DeleteMapping("/{id}")
+    @PreAuthorize("hasRole('GESTOR_RRHH')")
     public ResponseEntity<?> deleteCompetenceImportance(@PathVariable Long id) {
         try {
             return new ResponseEntity<>(competenceImportanceService.deleteCompetenceImportance(id), HttpStatus.OK);
@@ -85,7 +89,8 @@ public class CompetenceImportanceController {
         }
     }
 
-    @RequestMapping(value = "/findAll_competenceImportance", method = RequestMethod.GET)
+    @GetMapping()
+    @PreAuthorize("hasRole('GESTOR_RRHH')")
     public ResponseEntity<?> findAllCompetenceImportance() {
         try {
             return new ResponseEntity<>(competenceImportanceService.findAllByOrderByIdAsc(), HttpStatus.OK);
@@ -96,7 +101,8 @@ public class CompetenceImportanceController {
         }
     }
 
-    @RequestMapping(value = "/findByID_competenceImportance/{id}", method = RequestMethod.GET)
+    @GetMapping("/{id}")
+    @PreAuthorize("hasRole('GESTOR_RRHH')")
     public ResponseEntity<?> findCompetenceImportanceById(@PathVariable Long id) {
         try {
             return new ResponseEntity<>(competenceImportanceService.findCompetenceImportanceById(id), HttpStatus.OK);

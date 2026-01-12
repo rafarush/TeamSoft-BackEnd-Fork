@@ -7,6 +7,7 @@ import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.validation.BindingResult;
 import org.springframework.web.bind.annotation.*;
 
@@ -15,13 +16,14 @@ import java.util.Map;
 
 @RestController
 @Tag(name = "PersonGroup")
-@RequestMapping("/personGroup")
+@RequestMapping("/personGroups")
 public class PersonGroupController {
 
     @Autowired
     private PersonGroupServiceImpl personGroupService;
 
-    @RequestMapping(value = "/create_personGroup", method = RequestMethod.POST)
+    @PostMapping()
+    @PreAuthorize("hasRole('GESTOR_RRHH')")
     public ResponseEntity<?> createPersonGroup(@Valid @RequestBody PersonGroupDTO.PersonGroupCreateDTO personGroupDTO, BindingResult bindingResult) {
 
         if (bindingResult.hasErrors()) {
@@ -40,7 +42,8 @@ public class PersonGroupController {
         }
     }
 
-    @RequestMapping(value = "/update_personGroup/{id}", method = RequestMethod.PUT)
+    @PutMapping("/{id}")
+    @PreAuthorize("hasRole('GESTOR_RRHH')")
     public ResponseEntity<?> updatePersonGroup(@Valid @RequestBody PersonGroupDTO.PersonGroupCreateDTO personGroupDTO,
                                                BindingResult bindingResult,
                                                @PathVariable Long id) {
@@ -65,7 +68,8 @@ public class PersonGroupController {
         }
     }
 
-    @RequestMapping(value = "/delete_personGroup/{id}", method = RequestMethod.DELETE)
+    @DeleteMapping("/{id}")
+    @PreAuthorize("hasRole('GESTOR_RRHH')")
     public ResponseEntity<?> deletePersonGroup(@PathVariable Long id) {
         try {
             return new ResponseEntity<>(personGroupService.deletePersonGroup(id), HttpStatus.OK);
@@ -80,7 +84,8 @@ public class PersonGroupController {
         }
     }
 
-    @RequestMapping(value = "/findAll_personGroup", method = RequestMethod.GET)
+    @GetMapping()
+    @PreAuthorize("hasRole('GESTOR_RRHH')")
     public ResponseEntity<?> findAllPersonGroup() {
         try {
             return new ResponseEntity<>(personGroupService.findAllByOrderByIdAsc(), HttpStatus.OK);
@@ -91,7 +96,8 @@ public class PersonGroupController {
         }
     }
 
-    @RequestMapping(value = "/findByID_personGroup/{id}", method = RequestMethod.GET)
+    @GetMapping("/{id}")
+    @PreAuthorize("hasRole('GESTOR_RRHH')")
     public ResponseEntity<?> findPersonGroupById(@PathVariable Long id) {
         try {
             return new ResponseEntity<>(personGroupService.findPersonGroupById(id), HttpStatus.OK);

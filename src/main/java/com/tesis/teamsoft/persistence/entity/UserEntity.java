@@ -10,6 +10,7 @@ import lombok.Setter;
 
 import java.io.Serializable;
 import java.util.List;
+import java.util.Set;
 
 @Entity
 @Getter
@@ -64,9 +65,12 @@ public class UserEntity implements Serializable {
     @NotNull
     private boolean enabled;
 
-    /*Se establece la relación con Authorities(tabla y clase), a traves del atributo mapeado(users) en la clase AuthoritiesEntity*/
-    @OneToMany(cascade = CascadeType.ALL, mappedBy = "users")
-    private List<AuthorityEntity> authorities;
+    @ManyToMany(fetch = FetchType.EAGER, targetEntity = UserRoleEntity.class)
+    @JoinTable(name = "authorities",
+            joinColumns = @JoinColumn(name = "user_id"),
+            inverseJoinColumns = @JoinColumn(name = "user_role_id")
+    )
+    private Set<UserRoleEntity> roles;
 
     //===================================================================================
 

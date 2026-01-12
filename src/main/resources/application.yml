@@ -25,6 +25,14 @@ spring:
       max-lifetime: 1200000
       auto-commit: true
 
+security:
+  jwt:
+    key:
+      private: d1015495a3db2e85eb17d547b37249d1addeec83e509e1b072f0c18e51cae0f2
+    user:
+      generator: teamsoft-api
+    expiration-ms: 7200000
+
 server:
   port: 8081
 

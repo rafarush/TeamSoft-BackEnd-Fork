@@ -98,10 +98,10 @@ public class PersonEntity implements Serializable {
 
     /*Se establece la relacion con CompetenceValue(tabla y clase),
      a traves del atributo mapeado(person) en la clase CompetenceValueEntity*/
-    @OneToMany(cascade = CascadeType.ALL, mappedBy = "person")
+    @OneToMany(cascade = CascadeType.ALL, mappedBy = "person", orphanRemoval = true)
     private List<CompetenceValueEntity> competenceValueList;
 
-    @OneToMany(cascade = CascadeType.ALL, mappedBy = "person")
+    @OneToMany(cascade = CascadeType.ALL, mappedBy = "person", orphanRemoval = true)
     private  List<PersonConflictEntity> personConflictList;
 
     @OneToMany(cascade = CascadeType.ALL, mappedBy = "personConflict")
@@ -109,12 +109,12 @@ public class PersonEntity implements Serializable {
 
     /*Se establece la relacion con PersonalInterests(tabla y clase),
      a traves del atributo mapeado(person) en la clase PersonalInterestsEntity*/
-    @OneToMany(cascade = CascadeType.ALL, mappedBy = "person")
+    @OneToMany(cascade = CascadeType.ALL, mappedBy = "person", orphanRemoval = true)
     private List<PersonalInterestsEntity> personalInterestsList;
 
     /*Se establece la relacion con PersonalProjectInterests(tabla y clase),
      a traves del atributo mapeado(person) en la clase PersonalProjectInterestsEntity*/
-    @OneToMany(cascade = CascadeType.ALL, mappedBy = "person")
+    @OneToMany(cascade = CascadeType.ALL, mappedBy = "person", orphanRemoval = true)
     private List<PersonalProjectInterestsEntity> personalProjectInterestsList;
 
     /*Se establece la relacion con RolePersonEval(tabla y clase),
@@ -127,9 +127,8 @@ public class PersonEntity implements Serializable {
 
     /*Se establece la relacion con PersonalProjectInterests(tabla y clase),
      a traves del atributo mapeado(person) en la clase PersonalProjectInterestsEntity*/
-    @OneToOne(cascade = CascadeType.ALL, mappedBy = "person")
+    @OneToOne(cascade = CascadeType.ALL, mappedBy = "person", orphanRemoval = true)
     private PersonTestEntity personTest;
-
 
     //Relaciones ManyToOne a traves de Join
     @JoinColumn(name = "county_fk", referencedColumnName = "id")//<--Establece la relacion con la clase CountyEnitty
@@ -168,18 +167,29 @@ public class PersonEntity implements Serializable {
     }
 
     //Método para calcular la edad de una persona
-    public int getAge(){
+    public int getAge() {
         int age = 0;
 
-        if(birthDate != null){    //Se comprueba que las fechas no están null
-            Date today = new Date();
-            LocalDate firstDate = birthDate.toInstant().atZone(ZoneId.systemDefault()).toLocalDate();
-            LocalDate secondDate = today.toInstant().atZone(ZoneId.systemDefault()).toLocalDate();
+        if (birthDate != null) {
+            LocalDate firstDate;
+
+            if (birthDate instanceof java.sql.Date) {
+                // Si es java.sql.Date
+                firstDate = ((java.sql.Date) birthDate).toLocalDate();
+            } else {
+                // Si es java.util.Date
+                firstDate = birthDate.toInstant()
+                        .atZone(ZoneId.systemDefault())
+                        .toLocalDate();
+            }
+
+            LocalDate secondDate = LocalDate.now();
             age = Period.between(firstDate, secondDate).getYears();
         }
 
         return age;
     }
+
 
     public RoleExperienceEntity getRoleExperience(Long idRol) {
         RoleExperienceEntity xp = new RoleExperienceEntity();

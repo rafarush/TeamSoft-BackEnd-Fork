@@ -7,6 +7,7 @@ import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.validation.BindingResult;
 import org.springframework.web.bind.annotation.*;
 
@@ -21,7 +22,8 @@ public class CountyController {
     @Autowired
     private CountyServiceImpl countyService;
 
-    @RequestMapping(value = "/create_county", method = RequestMethod.POST)
+    @PostMapping()
+    @PreAuthorize("hasRole('GESTOR_RRHH')")
     public ResponseEntity<?> createCounty(@Valid @RequestBody CountyDTO.CountyCreateDTO countyDTO, BindingResult bindingResult) {
 
         if (bindingResult.hasErrors()) {
@@ -40,7 +42,8 @@ public class CountyController {
         }
     }
 
-    @RequestMapping(value = "/update_county/{id}", method = RequestMethod.PUT)
+    @PutMapping("/{id}")
+    @PreAuthorize("hasRole('GESTOR_RRHH')")
     public ResponseEntity<?> updateCounty(@Valid @RequestBody CountyDTO.CountyCreateDTO countyDTO,
                                           BindingResult bindingResult,
                                           @PathVariable Long id) {
@@ -65,7 +68,8 @@ public class CountyController {
         }
     }
 
-    @RequestMapping(value = "/delete_county/{id}", method = RequestMethod.DELETE)
+    @DeleteMapping("/{id}")
+    @PreAuthorize("hasRole('GESTOR_RRHH')")
     public ResponseEntity<?> deleteCounty(@PathVariable Long id) {
         try {
             return new ResponseEntity<>(countyService.deleteCounty(id), HttpStatus.OK);
@@ -80,7 +84,8 @@ public class CountyController {
         }
     }
 
-    @RequestMapping(value = "/findAll_county", method = RequestMethod.GET)
+    @GetMapping()
+    @PreAuthorize("hasRole('GESTOR_RRHH')")
     public ResponseEntity<?> findAllCounty() {
         try {
             return new ResponseEntity<>(countyService.findAllByOrderByIdAsc(), HttpStatus.OK);
@@ -91,7 +96,8 @@ public class CountyController {
         }
     }
 
-    @RequestMapping(value = "/findByID_county/{id}", method = RequestMethod.GET)
+    @GetMapping("/{id}")
+    @PreAuthorize("hasRole('GESTOR_RRHH')")
     public ResponseEntity<?> findCountyById(@PathVariable Long id) {
         try {
             return new ResponseEntity<>(countyService.findCountyById(id), HttpStatus.OK);

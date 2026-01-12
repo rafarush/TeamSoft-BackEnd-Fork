@@ -7,6 +7,7 @@ import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.validation.BindingResult;
 import org.springframework.web.bind.annotation.*;
 
@@ -15,13 +16,14 @@ import java.util.Map;
 
 @RestController
 @Tag(name = "Client")
-@RequestMapping("/client")
+@RequestMapping("/clients")
 public class ClientController {
 
     @Autowired
     private ClientServiceImpl clientService;
 
-    @RequestMapping(value = "/create_client", method = RequestMethod.POST)
+    @PostMapping()
+    @PreAuthorize("hasRole('GESTOR_RRHH')")
     public ResponseEntity<?> createClient(@Valid @RequestBody ClientDTO.ClientCreateDTO clientDTO, BindingResult bindingResult) {
 
         if (bindingResult.hasErrors()) {
@@ -40,7 +42,8 @@ public class ClientController {
         }
     }
 
-    @RequestMapping(value = "/update_client/{id}", method = RequestMethod.PUT)
+    @PutMapping("/{id}")
+    @PreAuthorize("hasRole('GESTOR_RRHH')")
     public ResponseEntity<?> updateClient(@Valid @RequestBody ClientDTO.ClientCreateDTO clientDTO,
                                           BindingResult bindingResult,
                                           @PathVariable Long id) {
@@ -65,7 +68,8 @@ public class ClientController {
         }
     }
 
-    @RequestMapping(value = "/delete_client/{id}", method = RequestMethod.DELETE)
+    @DeleteMapping("/{id}")
+    @PreAuthorize("hasRole('GESTOR_RRHH')")
     public ResponseEntity<?> deleteClient(@PathVariable Long id) {
         try {
             return new ResponseEntity<>(clientService.deleteClient(id), HttpStatus.OK);
@@ -80,7 +84,8 @@ public class ClientController {
         }
     }
 
-    @RequestMapping(value = "/findAll_client", method = RequestMethod.GET)
+    @GetMapping()
+    @PreAuthorize("hasRole('GESTOR_RRHH')")
     public ResponseEntity<?> findAllClient() {
         try {
             return new ResponseEntity<>(clientService.findAllByOrderByIdAsc(), HttpStatus.OK);
@@ -91,7 +96,8 @@ public class ClientController {
         }
     }
 
-    @RequestMapping(value = "/findByID_client/{id}", method = RequestMethod.GET)
+    @GetMapping("/{id}")
+    @PreAuthorize("hasRole('GESTOR_RRHH')")
     public ResponseEntity<?> findClientById(@PathVariable Long id) {
         try {
             return new ResponseEntity<>(clientService.findClientById(id), HttpStatus.OK);

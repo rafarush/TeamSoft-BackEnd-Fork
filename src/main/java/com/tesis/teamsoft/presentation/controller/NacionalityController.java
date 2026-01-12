@@ -7,6 +7,7 @@ import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.validation.BindingResult;
 import org.springframework.web.bind.annotation.*;
 
@@ -21,7 +22,8 @@ public class NacionalityController {
     @Autowired
     private NacionalityServiceImpl nacionalityService;
 
-    @RequestMapping(value = "/create_nacionality", method = RequestMethod.POST)
+    @PostMapping()
+    @PreAuthorize("hasRole('GESTOR_RRHH')")
     public ResponseEntity<?> createNacionality(@Valid @RequestBody NacionalityDTO.NacionalityCreateDTO nacionalityDTO, BindingResult bindingResult) {
 
         if (bindingResult.hasErrors()) {
@@ -40,7 +42,8 @@ public class NacionalityController {
         }
     }
 
-    @RequestMapping(value = "/update_nacionality/{id}", method = RequestMethod.PUT)
+    @PutMapping("/{id}")
+    @PreAuthorize("hasRole('GESTOR_RRHH')")
     public ResponseEntity<?> updateNacionality(@Valid @RequestBody NacionalityDTO.NacionalityCreateDTO nacionalityDTO,
                                                BindingResult bindingResult,
                                                @PathVariable Long id) {
@@ -65,7 +68,8 @@ public class NacionalityController {
         }
     }
 
-    @RequestMapping(value = "/delete_nacionality/{id}", method = RequestMethod.DELETE)
+    @DeleteMapping("/{id}")
+    @PreAuthorize("hasRole('GESTOR_RRHH')")
     public ResponseEntity<?> deleteNacionality(@PathVariable Long id) {
         try {
             return new ResponseEntity<>(nacionalityService.deleteNacionality(id), HttpStatus.OK);
@@ -80,7 +84,8 @@ public class NacionalityController {
         }
     }
 
-    @RequestMapping(value = "/findAll_nacionality", method = RequestMethod.GET)
+    @GetMapping()
+    @PreAuthorize("hasRole('GESTOR_RRHH')")
     public ResponseEntity<?> findAllNacionality() {
         try {
             return new ResponseEntity<>(nacionalityService.findAllByOrderByIdAsc(), HttpStatus.OK);
@@ -91,7 +96,8 @@ public class NacionalityController {
         }
     }
 
-    @RequestMapping(value = "/findByID_nacionality/{id}", method = RequestMethod.GET)
+    @GetMapping("/{id}")
+    @PreAuthorize("hasRole('GESTOR_RRHH')")
     public ResponseEntity<?> findNacionalityById(@PathVariable Long id) {
         try {
             return new ResponseEntity<>(nacionalityService.findNacionalityById(id), HttpStatus.OK);
