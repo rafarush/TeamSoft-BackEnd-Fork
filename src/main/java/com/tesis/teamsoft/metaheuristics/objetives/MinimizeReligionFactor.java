@@ -13,7 +13,7 @@ import static com.tesis.teamsoft.metaheuristics.util.FactorEvaluation.ReligionEv
 @Getter
 public class MinimizeReligionFactor extends ObjetiveFunction {
     private TeamFormationParameters parameters;
-    public static String className = "Equipo Heterogéneo Religión";
+    public static String className = "Equipo Homogéneo Religión";
 
     public MinimizeReligionFactor(TeamFormationParameters parameters) {
         super();

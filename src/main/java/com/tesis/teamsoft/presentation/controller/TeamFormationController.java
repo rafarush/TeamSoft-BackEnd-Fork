@@ -5,6 +5,7 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 import com.tesis.teamsoft.presentation.dto.TeamFormationDTO;
 
@@ -19,7 +20,8 @@ public class TeamFormationController {
     @Autowired
     private TeamFormationStepThreeImpl teamFormationStepThree;
 
-    @RequestMapping(value = "/getTeams", method = RequestMethod.GET)
+    @GetMapping()
+    @PreAuthorize("hasRole('EXPERIMENTADOR') OR hasRole('DIRECTIVO_TECNICO')")
     public ResponseEntity<?> findAgeGroupById(@RequestBody TeamFormationDTO dto) {
 
         try {

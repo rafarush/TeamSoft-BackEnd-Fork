@@ -85,7 +85,7 @@ public class RoleServiceImpl implements IRoleService {
         RoleEntity role = roleRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Role not found with ID: " + id));
 
-        if (!role.getAssignedRoleList().isEmpty() || !role.getRoleCompetitionList().isEmpty() ||
+        if (!role.getAssignedRoleList().isEmpty() ||
                 !role.getRoleExperienceList().isEmpty() || !role.getPersonalInterestsList().isEmpty()) {
             throw new IllegalArgumentException("Cannot delete role because it has associated relations");
         }
@@ -176,8 +176,8 @@ public class RoleServiceImpl implements IRoleService {
                 finalList.add(validatedRc);
             }
         }
-
-        role.setRoleCompetitionList(finalList);
+        role.getRoleCompetitionList().clear();
+        role.getRoleCompetitionList().addAll(finalList);
     }
 
     private List<RoleEntity> processIncompatibleRoles(List<Long> incompatibleRoleIds, RoleEntity currentRole) {
@@ -197,6 +197,7 @@ public class RoleServiceImpl implements IRoleService {
 
     private RoleDTO.RoleResponseDTO convertToResponseDTO(RoleEntity role) {
         RoleDTO.RoleResponseDTO responseDTO = modelMapper.map(role, RoleDTO.RoleResponseDTO.class);
+        responseDTO.setIsBoss(role.isBoss());
 
         // Convertir RoleCompetitions
         if (role.getRoleCompetitionList() != null) {

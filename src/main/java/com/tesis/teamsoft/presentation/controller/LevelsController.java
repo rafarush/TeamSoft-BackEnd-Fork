@@ -7,6 +7,7 @@ import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.validation.BindingResult;
 import org.springframework.web.bind.annotation.*;
 
@@ -21,7 +22,8 @@ public class LevelsController {
     @Autowired
     private LevelsServiceImpl levelsService;
 
-    @RequestMapping(value = "/create_levels", method = RequestMethod.POST)
+    @PostMapping()
+    @PreAuthorize("hasRole('GESTOR_RRHH')")
     public ResponseEntity<?> createLevels(@Valid @RequestBody LevelsDTO.LevelsCreateDTO levelsDTO, BindingResult bindingResult) {
 
         if (bindingResult.hasErrors()) {
@@ -40,7 +42,8 @@ public class LevelsController {
         }
     }
 
-    @RequestMapping(value = "/update_levels/{id}", method = RequestMethod.PUT)
+    @PutMapping("/{id}")
+    @PreAuthorize("hasRole('GESTOR_RRHH')")
     public ResponseEntity<?> updateLevels(@Valid @RequestBody LevelsDTO.LevelsCreateDTO levelsDTO,
                                           BindingResult bindingResult,
                                           @PathVariable Long id) {
@@ -65,7 +68,8 @@ public class LevelsController {
         }
     }
 
-    @RequestMapping(value = "/delete_levels/{id}", method = RequestMethod.DELETE)
+    @DeleteMapping("/{id}")
+    @PreAuthorize("hasRole('GESTOR_RRHH')")
     public ResponseEntity<?> deleteLevels(@PathVariable Long id) {
         try {
             return new ResponseEntity<>(levelsService.deleteLevels(id), HttpStatus.OK);
@@ -80,7 +84,8 @@ public class LevelsController {
         }
     }
 
-    @RequestMapping(value = "/findAll_levels", method = RequestMethod.GET)
+    @GetMapping()
+    @PreAuthorize("hasRole('GESTOR_RRHH')")
     public ResponseEntity<?> findAllLevels() {
         try {
             return new ResponseEntity<>(levelsService.findAllByOrderByIdAsc(), HttpStatus.OK);
@@ -91,7 +96,8 @@ public class LevelsController {
         }
     }
 
-    @RequestMapping(value = "/findByID_levels/{id}", method = RequestMethod.GET)
+    @GetMapping("/{id}")
+    @PreAuthorize("hasRole('GESTOR_RRHH')")
     public ResponseEntity<?> findLevelsById(@PathVariable Long id) {
         try {
             return new ResponseEntity<>(levelsService.findLevelsById(id), HttpStatus.OK);

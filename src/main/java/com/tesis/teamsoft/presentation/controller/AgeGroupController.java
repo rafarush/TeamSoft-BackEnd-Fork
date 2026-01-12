@@ -7,6 +7,7 @@ import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.validation.BindingResult;
 import org.springframework.web.bind.annotation.*;
 
@@ -15,13 +16,14 @@ import java.util.Map;
 
 @RestController
 @Tag(name = "AgeGroups")
-@RequestMapping("/ageGroup")
+@RequestMapping("/ageGroups")
 public class AgeGroupController {
 
     @Autowired
     private AgeGroupServiceImpl ageGroupService;
 
-    @RequestMapping(value = "/create_ageGroup", method = RequestMethod.POST)
+    @PostMapping()
+    @PreAuthorize("hasRole('GESTOR_RRHH')")
     public ResponseEntity<?> createAgeGroup(@Valid @RequestBody AgeGroupDTO.AgeGroupCreateDTO ageGroupDTO, BindingResult bindingResult) {
 
         if (bindingResult.hasErrors()) {
@@ -41,7 +43,8 @@ public class AgeGroupController {
         }
     }
 
-    @RequestMapping(value = "/update_ageGroup/{id}", method = RequestMethod.PUT)
+    @PutMapping("/{id}")
+    @PreAuthorize("hasRole('GESTOR_RRHH')")
     public ResponseEntity<?> updateAgeGroup(@Valid @RequestBody AgeGroupDTO.AgeGroupCreateDTO ageGroupDTO
             , BindingResult bindingResult
             , @PathVariable long id) {
@@ -68,7 +71,8 @@ public class AgeGroupController {
         }
     }
 
-    @RequestMapping(value = "/delete_ageGroup/{id}", method = RequestMethod.DELETE)
+    @DeleteMapping("/{id}")
+    @PreAuthorize("hasRole('GESTOR_RRHH')")
     public ResponseEntity<?> deleteAgeGroup(@PathVariable Long id) {
 
         try {
@@ -85,7 +89,8 @@ public class AgeGroupController {
         }
     }
 
-    @RequestMapping(value = "/findAll_ageGroup", method = RequestMethod.GET)
+    @GetMapping()
+    @PreAuthorize("hasRole('GESTOR_RRHH')")
     public ResponseEntity<?> findAllAgeGroup() {
         try {
             return new ResponseEntity<>(ageGroupService.findAllByOrderByIdAsc(), HttpStatus.OK);
@@ -96,7 +101,8 @@ public class AgeGroupController {
         }
     }
 
-    @RequestMapping(value = "findByID_ageGroup/{id}", method = RequestMethod.GET)
+    @GetMapping("/{id}")
+    @PreAuthorize("hasRole('GESTOR_RRHH')")
     public ResponseEntity<?> findAgeGroupById(@PathVariable Long id) {
         try {
             return new ResponseEntity<>(ageGroupService.findAgeGroupById(id), HttpStatus.FOUND);

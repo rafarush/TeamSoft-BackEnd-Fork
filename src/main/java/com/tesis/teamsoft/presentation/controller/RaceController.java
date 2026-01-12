@@ -7,6 +7,7 @@ import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.validation.BindingResult;
 import org.springframework.web.bind.annotation.*;
 
@@ -21,7 +22,8 @@ public class RaceController {
     @Autowired
     private RaceServiceImpl raceService;
 
-    @RequestMapping(value = "/create_race", method = RequestMethod.POST)
+    @PostMapping()
+    @PreAuthorize("hasRole('GESTOR_RRHH')")
     public ResponseEntity<?> createRace(@Valid @RequestBody RaceDTO.RaceCreateDTO raceDTO, BindingResult bindingResult) {
 
         if (bindingResult.hasErrors()) {
@@ -40,7 +42,8 @@ public class RaceController {
         }
     }
 
-    @RequestMapping(value = "/update_race/{id}", method = RequestMethod.PUT)
+    @PutMapping("/{id}")
+    @PreAuthorize("hasRole('GESTOR_RRHH')")
     public ResponseEntity<?> updateRace(@Valid @RequestBody RaceDTO.RaceCreateDTO raceDTO,
                                         BindingResult bindingResult,
                                         @PathVariable Long id) {
@@ -65,7 +68,8 @@ public class RaceController {
         }
     }
 
-    @RequestMapping(value = "/delete_race/{id}", method = RequestMethod.DELETE)
+    @DeleteMapping("/{id}")
+    @PreAuthorize("hasRole('GESTOR_RRHH')")
     public ResponseEntity<?> deleteRace(@PathVariable Long id) {
         try {
             return new ResponseEntity<>(raceService.deleteRace(id), HttpStatus.OK);
@@ -80,7 +84,8 @@ public class RaceController {
         }
     }
 
-    @RequestMapping(value = "/findAll_race", method = RequestMethod.GET)
+    @GetMapping()
+    @PreAuthorize("hasRole('GESTOR_RRHH')")
     public ResponseEntity<?> findAllRace() {
         try {
             return new ResponseEntity<>(raceService.findAllByOrderByIdAsc(), HttpStatus.OK);
@@ -91,7 +96,8 @@ public class RaceController {
         }
     }
 
-    @RequestMapping(value = "/findByID_race/{id}", method = RequestMethod.GET)
+    @GetMapping("/{id}")
+    @PreAuthorize("hasRole('GESTOR_RRHH')")
     public ResponseEntity<?> findRaceById(@PathVariable Long id) {
         try {
             return new ResponseEntity<>(raceService.findRaceById(id), HttpStatus.OK);

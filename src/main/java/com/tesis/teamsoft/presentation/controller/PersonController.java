@@ -7,6 +7,7 @@ import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.validation.BindingResult;
 import org.springframework.web.bind.annotation.*;
 
@@ -21,7 +22,8 @@ public class PersonController {
     @Autowired
     private PersonServiceImpl personService;
 
-    @RequestMapping(value = "/create_person", method = RequestMethod.POST)
+    @PostMapping()
+    @PreAuthorize("hasRole('GESTOR_RRHH')")
     public ResponseEntity<?> createPerson(@Valid @RequestBody PersonDTO.PersonCreateDTO personDTO, BindingResult bindingResult) {
 
         if (bindingResult.hasErrors()) {
@@ -33,7 +35,6 @@ public class PersonController {
         }
 
         try {
-
             return new ResponseEntity<>(personService.savePerson(personDTO), HttpStatus.CREATED);
         } catch (IllegalArgumentException e) {
             Map<String, String> error = new HashMap<>();
@@ -44,7 +45,6 @@ public class PersonController {
             Map<String, String> error = new HashMap<>();
             error.put("Error", e.getMessage());
 
-
             return new ResponseEntity<>(error, HttpStatus.NOT_FOUND);
         } catch (Exception e) {
             Map<String, String> error = new HashMap<>();
@@ -54,7 +54,8 @@ public class PersonController {
         }
     }
 
-    @RequestMapping(value = "/update_person/{id}", method = RequestMethod.PUT)
+    @PutMapping("/{id}")
+    @PreAuthorize("hasRole('GESTOR_RRHH')")
     public ResponseEntity<?> updatePerson(@Valid @RequestBody PersonDTO.PersonCreateDTO personDTO,
                                           BindingResult bindingResult,
                                           @PathVariable Long id) {
@@ -82,7 +83,8 @@ public class PersonController {
         }
     }
 
-    @RequestMapping(value = "/delete_person/{id}", method = RequestMethod.DELETE)
+    @DeleteMapping("/{id}")
+    @PreAuthorize("hasRole('GESTOR_RRHH')")
     public ResponseEntity<?> deletePerson(@PathVariable Long id) {
         try {
             return new ResponseEntity<>(personService.deletePerson(id), HttpStatus.OK);
@@ -101,7 +103,8 @@ public class PersonController {
         }
     }
 
-    @RequestMapping(value = "/findAll_person", method = RequestMethod.GET)
+    @GetMapping()
+    @PreAuthorize("hasRole('GESTOR_RRHH')")
     public ResponseEntity<?> findAllPerson() {
         try {
             return new ResponseEntity<>(personService.findAllByOrderByIdAsc(), HttpStatus.FOUND);
@@ -112,7 +115,8 @@ public class PersonController {
         }
     }
 
-    @RequestMapping(value = "/findByID_person/{id}", method = RequestMethod.GET)
+    @GetMapping("/{id}")
+    @PreAuthorize("hasRole('GESTOR_RRHH')")
     public ResponseEntity<?> findPersonById(@PathVariable Long id) {
         try {
             return new ResponseEntity<>(personService.findPersonById(id), HttpStatus.FOUND);

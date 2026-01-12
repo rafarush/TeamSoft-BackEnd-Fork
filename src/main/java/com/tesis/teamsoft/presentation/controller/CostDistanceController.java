@@ -7,6 +7,7 @@ import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.validation.BindingResult;
 import org.springframework.web.bind.annotation.*;
 
@@ -21,7 +22,8 @@ public class CostDistanceController {
     @Autowired
     private CostDistanceServiceImpl costDistanceService;
 
-    @RequestMapping(value = "/create_costDistance", method = RequestMethod.POST)
+    @PostMapping()
+    @PreAuthorize("hasRole('GESTOR_RRHH')")
     public ResponseEntity<?> createCostDistance(@Valid @RequestBody CostDistanceDTO.CostDistanceCreateDTO costDistanceDTO, BindingResult bindingResult) {
 
         if (bindingResult.hasErrors()) {
@@ -40,7 +42,8 @@ public class CostDistanceController {
         }
     }
 
-    @RequestMapping(value = "/update_costDistance/{id}", method = RequestMethod.PUT)
+    @PutMapping("/{id}")
+    @PreAuthorize("hasRole('GESTOR_RRHH')")
     public ResponseEntity<?> updateCostDistance(@Valid @RequestBody CostDistanceDTO.CostDistanceCreateDTO costDistanceDTO,
                                                 BindingResult bindingResult,
                                                 @PathVariable Long id) {
@@ -65,7 +68,8 @@ public class CostDistanceController {
         }
     }
 
-    @RequestMapping(value = "/delete_costDistance/{id}", method = RequestMethod.DELETE)
+    @DeleteMapping("/{id}")
+    @PreAuthorize("hasRole('GESTOR_RRHH')")
     public ResponseEntity<?> deleteCostDistance(@PathVariable Long id) {
         try {
             return new ResponseEntity<>(costDistanceService.deleteCostDistance(id), HttpStatus.OK);
@@ -80,7 +84,8 @@ public class CostDistanceController {
         }
     }
 
-    @RequestMapping(value = "/findAll_costDistance", method = RequestMethod.GET)
+    @GetMapping()
+    @PreAuthorize("hasRole('GESTOR_RRHH')")
     public ResponseEntity<?> findAllCostDistance() {
         try {
             return new ResponseEntity<>(costDistanceService.findAllByOrderByIdAsc(), HttpStatus.OK);
@@ -91,7 +96,8 @@ public class CostDistanceController {
         }
     }
 
-    @RequestMapping(value = "/findByID_costDistance/{id}", method = RequestMethod.GET)
+    @GetMapping("/{id}")
+    @PreAuthorize("hasRole('GESTOR_RRHH')")
     public ResponseEntity<?> findCostDistanceById(@PathVariable Long id) {
         try {
             return new ResponseEntity<>(costDistanceService.findCostDistanceById(id), HttpStatus.OK);
