@@ -1,6 +1,8 @@
 spring:
   application:
     name: TeamSoft
+  config:
+    import: "classpath:config.properties"
 
   jpa:
     hibernate:
@@ -14,9 +16,9 @@ spring:
 
   datasource:
     driver-class-name: org.postgresql.Driver
-    url: jdbc:postgresql://localhost:5434/TeamSoft-DB
-    username: postgres
-    password: pascual0815*
+    url: ${db.url}
+    username: ${db.username}
+    password: ${db.password}
     hikari:
       connection-timeout: 30000
       maximum-pool-size: 20
@@ -28,11 +30,11 @@ spring:
 security:
   jwt:
     key:
-      private: d1015495a3db2e85eb17d547b37249d1addeec83e509e1b072f0c18e51cae0f2
+      private: ${jwt.key.private}
     user:
-      generator: teamsoft-api
-    expiration-ms: 7200000
+      generator: ${jwt.user.generator}
+    expiration-ms: ${jwt.expiration-ms}
 
 server:
-  port: 8081
+  port: ${server.port}
 
