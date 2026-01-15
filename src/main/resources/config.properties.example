@@ -4,3 +4,4 @@ db.password=password
 jwt.key.private=private-key
 jwt.user.generator=jwt-generator
 jwt.expiration-ms=time-in-ms
+server.port=8081
