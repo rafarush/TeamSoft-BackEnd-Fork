@@ -22,7 +22,7 @@ public class TeamFormationController {
 
     @PostMapping()
     @PreAuthorize("hasRole('EXPERIMENTADOR') OR hasRole('DIRECTIVO_TECNICO')")
-    public ResponseEntity<?> findAgeGroupById(@RequestBody TeamFormationDTO dto) {
+    public ResponseEntity<?> teamFormation(@RequestBody TeamFormationDTO dto) {
 
         try {
             return new ResponseEntity<>(teamFormationStepThree.getTeam(dto.getTeamFormationParameters()
