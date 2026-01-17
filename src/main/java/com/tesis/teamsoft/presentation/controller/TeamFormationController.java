@@ -1,5 +1,6 @@
 package com.tesis.teamsoft.presentation.controller;
 
+import com.tesis.teamsoft.presentation.dto.TeamProposalDTO;
 import com.tesis.teamsoft.service.implementation.TeamFormationStepThreeImpl;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -20,19 +21,29 @@ public class TeamFormationController {
     @Autowired
     private TeamFormationStepThreeImpl teamFormationStepThree;
 
-    @PostMapping()
+    @PostMapping("teams")
     @PreAuthorize("hasRole('EXPERIMENTADOR') OR hasRole('DIRECTIVO_TECNICO')")
-    public ResponseEntity<?> teamFormation(@RequestBody TeamFormationDTO dto) {
+    public ResponseEntity<?> getTeams(@RequestBody TeamFormationDTO dto) {
 
         try {
             return new ResponseEntity<>(teamFormationStepThree.getTeam(dto.getTeamFormationParameters()
-                    , dto.getProjectsIDs(), dto.getGroupIDs()), HttpStatus.FOUND);
+                    , dto.getProjectsIDs(), dto.getGroupIDs()), HttpStatus.OK);
 
         } catch (RuntimeException e) {
             Map<String, String> error = new HashMap<>();
             error.put("Error: ", e.getMessage());
             return new ResponseEntity<>(error, HttpStatus.NOT_FOUND);
         } catch (Exception e) {
+            throw new RuntimeException(e);
+        }
+    }
+
+    @PostMapping("save_teams")
+    @PreAuthorize("hasRole('EXPERIMENTADOR') OR hasRole('DIRECTIVO_TECNICO')")
+    public ResponseEntity<?> saveTeams(@RequestBody TeamProposalDTO dto) {
+        try{
+            return new ResponseEntity<>(teamFormationStepThree.saveTeamProposal(dto), HttpStatus.OK);
+        }catch (Exception e) {
             throw new RuntimeException(e);
         }
     }
