@@ -20,7 +20,7 @@ public class TeamFormationController {
     @Autowired
     private TeamFormationStepThreeImpl teamFormationStepThree;
 
-    @GetMapping()
+    @PostMapping()
     @PreAuthorize("hasRole('EXPERIMENTADOR') OR hasRole('DIRECTIVO_TECNICO')")
     public ResponseEntity<?> findAgeGroupById(@RequestBody TeamFormationDTO dto) {
 
