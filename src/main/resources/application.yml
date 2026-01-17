@@ -40,5 +40,14 @@ server:
 
 ext-modules:
   combination-mod:
-    api-key: ${ext-modules.combination-mod.api-key}
+    default-key: ${ext-modules.combination-mod.default-key}
+    base-url: ${ext-modules.combination-mod.base-url}
+
+    services:
+      combine-team:
+        endpoint: ${ext-modules.combination-mod.services.combine.endpoint}
+#       Custom endpoint api-key can be defined
+#       api-key: ${ext-modules.combination-mod.services.combine.api-key}
+
+
 
