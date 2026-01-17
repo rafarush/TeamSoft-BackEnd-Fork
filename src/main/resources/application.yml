@@ -38,3 +38,7 @@ security:
 server:
   port: ${server.port}
 
+ext-modules:
+  combination-mod:
+    api-key: ${ext-modules.combination-mod.api-key}
+
