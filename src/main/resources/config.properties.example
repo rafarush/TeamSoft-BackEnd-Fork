@@ -5,3 +5,13 @@ jwt.key.private=private-key
 jwt.user.generator=jwt-generator
 jwt.expiration-ms=time-in-ms
 server.port=8081
+
+# External modules
+
+# Combination module
+ext-modules.combination-mod.default-key=your-api-key
+ext-modules.combination-mod.base-url=your-base-url
+ext-modules.combination-mod.services.combine.endpoint=your-endpoint
+
+# Custom endpoint api-key can be defined like:
+# ext-modules.combination-mod.services.combine.api-key=your-api-key
