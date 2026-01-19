@@ -57,7 +57,7 @@ public class TeamFormationStepThreeImpl implements ITeamFormationStepThreeServic
     @Autowired
     private IPersonGroupRepository iPersonGroupRepository;
 
-    public TreeNode getTeam(TeamFormationParameters parameters, List<Long> projectsIDs, List<Long> groupIDs) throws Exception {
+    public List<TeamProposalDTO>  getTeam(TeamFormationParameters parameters, List<Long> projectsIDs, List<Long> groupIDs) throws Exception {
 
         parameters.setProjects(formatProjects(getUnsavedProjects(projectsIDs)));
         parameters.setSearchArea(getSearchArea(getGroups(groupIDs)));
@@ -69,7 +69,7 @@ public class TeamFormationStepThreeImpl implements ITeamFormationStepThreeServic
 
         ProjectRoleState initialVoidSolution = TeamBuilder.getInitialVoidSolution(parameters); // construir una solucion inicial vacía (contendrá las personas que ya fueron asignadas a cada rol)
 
-        TreeNode teamProposal = new TreeNode();
+        List<TeamProposalDTO> teamProposal = new ArrayList<>();
 
         //Funciones objetivo
         ArrayList<ObjetiveFunction> objectiveFunctions = new ArrayList<>();
@@ -103,43 +103,43 @@ public class TeamFormationStepThreeImpl implements ITeamFormationStepThreeServic
                     switch (parameters.getSolutionAlgorithm()) {
                         case 1:
                             teamProposal = buildTeamProposalTree(applyHillClimbing(initialVoidSolution, problem), parameters);
-                            if (teamProposal.getChildCount() < 1) {
+                            if (teamProposal.isEmpty()) {
                                 throw new IllegalArgumentException("impossible_get_proposal");
                             }
                             break;
                         case 2:
                             teamProposal = buildTeamProposalTree(applyHillClimbingRestart(initialVoidSolution, problem), parameters);
-                            if (teamProposal.getChildCount() < 1) {
+                            if (teamProposal.isEmpty()) {
                                 throw new IllegalArgumentException("impossible_get_proposal");
                             }
                             break;
                         case 3:
                             teamProposal = buildTeamProposalTree(applyRandomSearch(initialVoidSolution, problem), parameters);
-                            if (teamProposal.getChildCount() < 1) {
+                            if (teamProposal.isEmpty()) {
                                 throw new IllegalArgumentException("impossible_get_proposal");
                             }
                             break;
                         case 4:
                             teamProposal = buildTeamProposalTree(applyTabuSearch(initialVoidSolution, problem), parameters);
-                            if (teamProposal.getChildCount() < 1) {
+                            if (teamProposal.isEmpty()) {
                                 throw new IllegalArgumentException("impossible_get_proposal");
                             }
                             break;
                         case 5:
                             teamProposal = buildTeamProposalTree(applyAlgorithmsBriefcase(initialVoidSolution, problem), parameters);
-                            if (teamProposal.getChildCount() < 1) {
+                            if (teamProposal.isEmpty()) {
                                 throw new IllegalArgumentException("impossible_get_proposal");
                             }
                             break;
                         case 6:
                             teamProposal = buildTeamProposalTree(GA(initialVoidSolution, problem), parameters);
-                            if (teamProposal.getChildCount() < 1) {
+                            if (teamProposal.isEmpty()) {
                                 throw new IllegalArgumentException("impossible_get_proposal");
                             }
                             break;
                         case 7:
                             teamProposal = buildTeamProposalTree(applySimulatedAnnealing(initialVoidSolution, problem), parameters);
-                            if (teamProposal.getChildCount() < 1) {
+                            if (teamProposal.isEmpty()) {
                                 throw new IllegalArgumentException("impossible_get_proposal");
                             }
                             break;
@@ -156,59 +156,59 @@ public class TeamFormationStepThreeImpl implements ITeamFormationStepThreeServic
 
                     case 1:
                         teamProposal = buildTeamProposalTree(applyMultiobjectiveStochasticHC(initialVoidSolution, problem), parameters);
-                        if (teamProposal.getChildCount() < 1) {
+                        if (teamProposal.isEmpty()) {
                             throw new IllegalArgumentException("impossible_get_proposal");
                         }
                         break;
 
                     case 2:
                         teamProposal = buildTeamProposalTree(applyMultiobjectiveHCRestart(initialVoidSolution, problem), parameters);
-                        if (teamProposal.getChildCount() < 1) {
+                        if (teamProposal.isEmpty()) {
                             throw new IllegalArgumentException("impossible_get_proposal");
                         }
                         break;
 
                     case 3:
                         teamProposal = buildTeamProposalTree(applyMultiobjectiveHCDistance(initialVoidSolution, problem), parameters);
-                        if (teamProposal.getChildCount() < 1) {
+                        if (teamProposal.isEmpty()) {
                             throw new IllegalArgumentException("impossible_get_proposal");
                         }
                         break;
 
                     case 4:
                         teamProposal = buildTeamProposalTree(applyMultiobjectiveTabuSearch(initialVoidSolution, problem), parameters);
-                        if (teamProposal.getChildCount() < 1) {
+                        if (teamProposal.isEmpty()) {
                             throw new IllegalArgumentException("impossible_get_proposal");
                         }
                         break;
 
                     case 5:
                         teamProposal = buildTeamProposalTree(applyMultiobjectiveAlgorithmsBriefcase(initialVoidSolution, problem), parameters);
-                        if (teamProposal.getChildCount() < 1) {
+                        if (teamProposal.isEmpty()) {
                             throw new IllegalArgumentException("impossible_get_proposal");
                         }
                         break;
                     case 6:
                         teamProposal = buildTeamProposalTree(applyMOGA(initialVoidSolution, problem), parameters);
-                        if (teamProposal.getChildCount() < 1) {
+                        if (teamProposal.isEmpty()) {
                             throw new IllegalArgumentException("impossible_get_proposal");
                         }
                         break;
                     case 7:
                         teamProposal = buildTeamProposalTree(applyUMOSA(initialVoidSolution, problem), parameters);
-                        if (teamProposal.getChildCount() < 1) {
+                        if (teamProposal.isEmpty()) {
                             throw new IllegalArgumentException("impossible_get_proposal");
                         }
                         break;
                     case 8:
                         teamProposal = buildTeamProposalTree(applyMCMOSA(initialVoidSolution, problem), parameters);
-                        if (teamProposal.getChildCount() < 1) {
+                        if (teamProposal.isEmpty()) {
                             throw new IllegalArgumentException("impossible_get_proposal");
                         }
                         break;
                     case 9:
                         teamProposal = buildTeamProposalTree(applyNSGAII(initialVoidSolution, problem), parameters);
-                        if (teamProposal.getChildCount() < 1) {
+                        if (teamProposal.isEmpty()) {
                             throw new IllegalArgumentException("impossible_get_proposal");
                         }
                         break;
@@ -220,97 +220,18 @@ public class TeamFormationStepThreeImpl implements ITeamFormationStepThreeServic
         return teamProposal;
     }
 
-    public TreeNode buildTeamProposalTree(List<State> teamProposal, TeamFormationParameters parameters) throws NoSuchFieldException, IllegalArgumentException, IllegalAccessException {
-        TreeNode root = TreeNode.createRootNode(); // En lugar de new DefaultTreeNode()
-
-        if (!teamProposal.isEmpty()) {
-            String format = "0.####";//ResourceBundle.getBundle("/algorithmConf").getString("decimalFormat");
-            DecimalFormat df = new DecimalFormat(format);
-            root.setExpanded(true);
-            TreeNode prop;
-            TreeNode projectNode;
-            TreeNode projectEvaluation;
-            TreeNode roleNode;
-            TreeNode personNode;
-
-            ArrayList<ObjetiveFunction> objectiveFunctions = new ArrayList<>(ObjetiveFunctionUtil.getObjectiveFunctions(parameters));
-
-            for (State state : teamProposal) {
-                if (state != null) {
-                    StringBuilder eval = new StringBuilder();
-                    if (state.getEvaluation().size() == 1) {
-                        eval.append(" ").append(objectiveFunctions.getFirst().getClass().getField("className").get(null));
-                        for (int i = 1; i < objectiveFunctions.size(); i++) {
-                            eval.append(" | ").append(objectiveFunctions.get(i).getClass().getField("className").get(null));
-                        }
-                        eval.append(": ").append(df.format(state.getEvaluation().getFirst()));
-                    } else {
-                        for (int i = 0; i < objectiveFunctions.size(); i++) {
-                            eval.append(" ").append(objectiveFunctions.get(i).getClass().getField("className").get(null)).append(": ").append(df.format(state.getEvaluation().get(i)));
-                        }
-                    }
-                    String formattedEval = "Propuesta: " + eval.toString();
-
-                    prop = new DefaultTreeNode(formattedEval);
-                    prop.setType("Prop");
-                    prop.setExpanded(false);
-                    root.getChildren().add(prop);
-
-                    List<Object> projects = state.getCode();
-
-                    if (projects != null) {
-                        for (Object proj : projects) {
-                            ProjectRole projectRole = (ProjectRole) proj;
-
-                            projectNode = new DefaultTreeNode(modelMapper.map(projectRole.getProject(), ProjectDTO.ProjectResponseDTO.class));
-                            projectNode.setType("P");
-                            projectNode.setSelectable(false);
-                            projectNode.setExpanded(false);
-                            prop.getChildren().add(projectNode);
-
-                            for (RoleWorker pr : projectRole.getRoleWorkers()) {
-                                if (pr != null) {
-                                    roleNode = new DefaultTreeNode(modelMapper.map(pr.getRole(), RoleDTO.RoleResponseDTO.class));
-                                    roleNode.setType("R");
-                                    roleNode.setSelectable(false);
-                                    roleNode.setExpanded(true);
-                                    projectNode.getChildren().add(roleNode);
-
-                                    pr.getWorkers().addAll(pr.getFixedWorkers());
-                                    for (PersonEntity p : pr.getWorkers()) {
-                                        if (p != null) {
-                                            personNode = new DefaultTreeNode(modelMapper.map(p, PersonDTO.PersonResponseDTO.class));
-                                            personNode.setType("W");
-                                            personNode.setSelectable(true);
-                                            personNode.setExpanded(true);
-                                            roleNode.getChildren().add(personNode);
-                                        }
-                                    }
-                                }
-                            }
-                        }
-                    }
-                }
-            }
-        }
-
-        return root;
-    }
-
 //    public TreeNode buildTeamProposalTree(List<State> teamProposal, TeamFormationParameters parameters) throws NoSuchFieldException, IllegalArgumentException, IllegalAccessException {
 //        TreeNode root = TreeNode.createRootNode(); // En lugar de new DefaultTreeNode()
 //
 //        if (!teamProposal.isEmpty()) {
-//            String format = "0.####";//ResourceBundle.getBundle("/algorithmConf").getString("decimalFormat");
+//            String format = ResourceBundle.getBundle("/algorithmConf").getString("decimalFormat");
 //            DecimalFormat df = new DecimalFormat(format);
 //            root.setExpanded(true);
 //            TreeNode prop;
 //            TreeNode projectNode;
-//            TreeNode projectEvaluation;
 //            TreeNode roleNode;
 //            TreeNode personNode;
 //
-//            //Funciones objetivo
 //            ArrayList<ObjetiveFunction> objectiveFunctions = new ArrayList<>(ObjetiveFunctionUtil.getObjectiveFunctions(parameters));
 //
 //            for (State state : teamProposal) {
@@ -340,105 +261,15 @@ public class TeamFormationStepThreeImpl implements ITeamFormationStepThreeServic
 //                        for (Object proj : projects) {
 //                            ProjectRole projectRole = (ProjectRole) proj;
 //
-//                            projectNode = new DefaultTreeNode(projectRole.getProject());
+//                            projectNode = new DefaultTreeNode(modelMapper.map(projectRole.getProject(), ProjectDTO.ProjectResponseDTO.class));
 //                            projectNode.setType("P");
 //                            projectNode.setSelectable(false);
 //                            projectNode.setExpanded(false);
 //                            prop.getChildren().add(projectNode);
 //
-//                            for (int j = 0; j < projectRole.getProjectEvaluation().length - 1; j++) {
-//                                if (projectRole.getProjectEvaluation()[j] != null) {
-//                                    Double projectEval = projectRole.getProjectEvaluation()[j];
-//                                    String className = "";
-//                                    switch (j) {
-//                                        case 0:
-//                                            className = "Competencias";
-//                                            break;
-//                                        case 1:
-//                                            className = "Balance competencias";
-//                                            break;
-//                                        case 2:
-//                                            className = "Carga de trabajo";
-//                                            break;
-//                                        case 3:
-//                                            className = "Balance carga de trabajo";
-//                                            break;
-//                                        case 4:
-//                                            className = "Incompatibilidades";
-//                                            break;
-//                                        case 5:
-//                                            className = "Balance incompatibilidades";
-//                                            break;
-//                                        case 6:
-//                                            className = "Costo a distancia";
-//                                            break;
-//                                        case 7:
-//                                            className = "Balance costo a distancia";
-//                                            break;
-//                                        case 8:
-//                                            className = "Interés";
-//                                            break;
-//                                        case 9:
-//                                            className = "Balance interés";
-//                                            break;
-//                                        case 10:
-//                                            className = "Roles de Belbin";
-//                                            break;
-//                                        case 11:
-//                                            className = "Balance roles de Belbin";
-//                                            break;
-//                                        case 12:
-//                                            className = "Interés por proyecto";
-//                                            break;
-//                                        case 13:
-//                                            className = "Balance interés por proyecto";
-//                                            break;
-//                                        case 14:
-//                                            className = "Tipos MBTI";
-//                                            break;
-//                                        case 15:
-//                                            className = "Balance tipos MBTI";
-//                                            break;
-//                                        case 16:
-//                                            className = "Multirol";
-//                                            break;
-//                                        case 17:
-//                                            className = "Sexo Heterogéneo";
-//                                            break;
-//                                        case 18:
-//                                            className = "Sexo Homogéneo";
-//                                            break;
-//                                        case 19:
-//                                            className = "Balancear equipos Heterogéneos";
-//                                            break;
-//                                        case 20:
-//                                            className = "Balancear equipos Homogéneos";
-//                                            break;
-//                                        case 21:
-//                                            className = "Equipo Heterogéneo";
-//                                            break;
-//                                        case 22:
-//                                            className = "Equipo Homogéneo";
-//                                            break;
-//                                        case 23:
-//                                            className = "Balancear equipos heterogéneos formados";
-//                                            break;
-//                                        case 24:
-//                                            className = "Balancear equipos homogéneos formados";
-//                                            break;
-//
-//                                    }
-//                                    eval = new StringBuilder(className + ": " + df.format(projectEval));
-//                                    projectEvaluation = new DefaultTreeNode(eval.toString());
-//                                    projectEvaluation.setType("E");
-//                                    projectEvaluation.setSelectable(false);
-//                                    projectEvaluation.setExpanded(true);
-//                                    projectNode.getChildren().add(projectEvaluation);
-//                                }
-//                            }
 //                            for (RoleWorker pr : projectRole.getRoleWorkers()) {
 //                                if (pr != null) {
-//                                    roleNode = new DefaultTreeNode(pr.getRole());
+//                                    roleNode = new DefaultTreeNode(modelMapper.map(pr.getRole(), RoleDTO.RoleResponseDTO.class));
 //                                    roleNode.setType("R");
 //                                    roleNode.setSelectable(false);
 //                                    roleNode.setExpanded(true);
@@ -447,7 +278,7 @@ public class TeamFormationStepThreeImpl implements ITeamFormationStepThreeServic
 //                                    pr.getWorkers().addAll(pr.getFixedWorkers());
 //                                    for (PersonEntity p : pr.getWorkers()) {
 //                                        if (p != null) {
-//                                            personNode = new DefaultTreeNode(p);
+//                                            personNode = new DefaultTreeNode(modelMapper.map(p, PersonDTO.PersonResponseDTO.class));
 //                                            personNode.setType("W");
 //                                            personNode.setSelectable(true);
 //                                            personNode.setExpanded(true);
@@ -461,8 +292,68 @@ public class TeamFormationStepThreeImpl implements ITeamFormationStepThreeServic
 //                }
 //            }
 //        }
+//
 //        return root;
 //    }
+
+    public List<TeamProposalDTO> buildTeamProposalTree(List<State> teamProposal, TeamFormationParameters parameters) throws NoSuchFieldException, IllegalArgumentException, IllegalAccessException {
+        List<TeamProposalDTO> teamsProposal = new ArrayList<>();
+
+        if (!teamProposal.isEmpty()) {
+            String format = "0.####";//ResourceBundle.getBundle("/algorithmConf").getString("decimalFormat");
+            DecimalFormat df = new DecimalFormat(format);
+            ArrayList<ObjetiveFunction> objectiveFunctions = new ArrayList<>(ObjetiveFunctionUtil.getObjectiveFunctions(parameters));
+            TeamProposalDTO team;
+            ProjectDTO.ProjectTeamProposalDTO projectNode;
+            AssignedRoleDTO roleNode;
+            PersonDTO.PersonMinimalDTO personNode;
+
+            for (State state : teamProposal) {
+                if (state != null) {
+                    StringBuilder eval = new StringBuilder();
+                    if (state.getEvaluation().size() == 1) {
+                        eval.append(" ").append(objectiveFunctions.getFirst().getClass().getField("className").get(null));
+                        for (int i = 1; i < objectiveFunctions.size(); i++) {
+                            eval.append(" | ").append(objectiveFunctions.get(i).getClass().getField("className").get(null));
+                        }
+                        eval.append(": ").append(df.format(state.getEvaluation().getFirst()));
+                    } else {
+                        for (int i = 0; i < objectiveFunctions.size(); i++) {
+                            eval.append(" ").append(objectiveFunctions.get(i).getClass().getField("className").get(null)).append(": ").append(df.format(state.getEvaluation().get(i)));
+                        }
+                    }
+                    String formattedEval = "Propuesta: " + eval.toString();
+                    team = new TeamProposalDTO(formattedEval);
+
+                    List<Object> projects = state.getCode();
+
+                    if (projects != null) {
+                        for (Object proj : projects) {
+                            ProjectRole projectRole = (ProjectRole) proj;
+                            projectNode = new ProjectDTO.ProjectTeamProposalDTO(modelMapper.map(projectRole.getProject(), ProjectDTO.ProjectResponseDTO.class));
+
+                            for (RoleWorker pr : projectRole.getRoleWorkers()) {
+                                if (pr != null) {
+                                    roleNode = new AssignedRoleDTO(modelMapper.map(pr.getRole(), RoleDTO.RoleMinimalDTO.class));
+                                    pr.getWorkers().addAll(pr.getFixedWorkers());
+                                    for (PersonEntity p : pr.getWorkers()) {
+                                        if (p != null) {
+                                            personNode = modelMapper.map(p, PersonDTO.PersonMinimalDTO.class);
+                                            roleNode.getPersons().add(personNode);
+                                        }
+                                    }
+                                    projectNode.getAssignedRoles().add(roleNode);
+                                }
+                            }
+                            team.getProjectsProposal().add(projectNode);
+                        }
+                    }
+                    teamsProposal.add(team);
+                }
+            }
+        }
+        return teamsProposal;
+    }
 
     public boolean ensureGeneralFactorWeightSummatory(TeamFormationParameters parametersTeam) {
         boolean isOk = true;
@@ -678,16 +569,16 @@ public class TeamFormationStepThreeImpl implements ITeamFormationStepThreeServic
 
         for (PersonEntity item : source) { //para cada persona
             if (item.getStatus() != null && item.getStatus().equalsIgnoreCase("ACTIVE")) { //si esta activa
-                    int i = 0;
-                    while (i < groups.size()) // para cada grupo
+                int i = 0;
+                while (i < groups.size()) // para cada grupo
+                {
+                    if (item.getGroup().equals(groups.get(i))) //si la persona pertenece
                     {
-                        if (item.getGroup().equals(groups.get(i))) //si la persona pertenece
-                        {
-                            searchArea.add(item);
-                        }
-                        i++;
+                        searchArea.add(item);
                     }
+                    i++;
                 }
+            }
 
         }
         return searchArea;
@@ -697,10 +588,10 @@ public class TeamFormationStepThreeImpl implements ITeamFormationStepThreeServic
         List<PersonGroupEntity> groups = new ArrayList<>();
 
         for (Long id : groupsIDs) {
-           PersonGroupEntity group = iPersonGroupRepository.findById(id).
-                   orElseThrow(() -> new RuntimeException("No group found with id " + id));
+            PersonGroupEntity group = iPersonGroupRepository.findById(id).
+                    orElseThrow(() -> new RuntimeException("No group found with id " + id));
 
-           groups.add(group);
+            groups.add(group);
         }
 
         return groups;

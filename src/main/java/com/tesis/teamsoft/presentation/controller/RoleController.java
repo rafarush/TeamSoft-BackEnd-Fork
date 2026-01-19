@@ -7,6 +7,7 @@ import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.validation.BindingResult;
 import org.springframework.web.bind.annotation.*;
 
@@ -21,7 +22,8 @@ public class RoleController {
     @Autowired
     private RoleServiceImpl roleService;
 
-    @PostMapping("/create_role")
+    @PostMapping()
+    @PreAuthorize("hasRole('GESTOR_RRHH')")
     public ResponseEntity<?> createRole(@Valid @RequestBody RoleDTO.RoleCreateDTO roleDTO, BindingResult bindingResult) {
         if (bindingResult.hasErrors()) {
             Map<String, String> errors = new HashMap<>();
@@ -47,7 +49,8 @@ public class RoleController {
         }
     }
 
-    @PutMapping("/update_role/{id}")
+    @PutMapping("/{id}")
+    @PreAuthorize("hasRole('GESTOR_RRHH')")
     public ResponseEntity<?> updateRole(@Valid @RequestBody RoleDTO.RoleCreateDTO roleDTO,
                                         BindingResult bindingResult,
                                         @PathVariable Long id) {
@@ -75,7 +78,8 @@ public class RoleController {
         }
     }
 
-    @DeleteMapping("/delete_role/{id}")
+    @DeleteMapping("/{id}")
+    @PreAuthorize("hasRole('GESTOR_RRHH')")
     public ResponseEntity<?> deleteRole(@PathVariable Long id) {
         try {
             return new ResponseEntity<>(roleService.deleteRole(id), HttpStatus.OK);
@@ -94,7 +98,8 @@ public class RoleController {
         }
     }
 
-    @GetMapping("/findAll_role")
+    @GetMapping()
+    @PreAuthorize("hasRole('GESTOR_RRHH')")
     public ResponseEntity<?> findAllRole() {
         try {
             return new ResponseEntity<>(roleService.findAllByOrderByIdAsc(), HttpStatus.OK);
@@ -105,7 +110,8 @@ public class RoleController {
         }
     }
 
-    @GetMapping("/findByID_role/{id}")
+    @GetMapping("/{id}")
+    @PreAuthorize("hasRole('GESTOR_RRHH')")
     public ResponseEntity<?> findRoleById(@PathVariable Long id) {
         try {
             return new ResponseEntity<>(roleService.findRoleById(id), HttpStatus.OK);

@@ -220,7 +220,7 @@ public class PersonServiceImpl implements IPersonService {
         }
     }
 
-    private List<CompetenceValueEntity> processCompetenceValues(List<PersonDTO.CompetenceValueCreateDTO> competenceValuesDTO, PersonEntity person) {
+    private List<CompetenceValueEntity> processCompetenceValues(List<CompetenceValueDTO.CompetenceValueCreateDTO> competenceValuesDTO, PersonEntity person) {
         Set<Long> processedCompetenceIds = new HashSet<>();
 
         return competenceValuesDTO.stream().map(dto -> {
@@ -262,7 +262,7 @@ public class PersonServiceImpl implements IPersonService {
         person.getCompetenceValueList().addAll(finalList);
     }
 
-    private List<PersonalInterestsEntity> processPersonalInterests(List<PersonDTO.PersonalInterestCreateDTO> personalInterestsDTO, PersonEntity person) {
+    private List<PersonalInterestsEntity> processPersonalInterests(List<PersonalInterestDTP.PersonalInterestCreateDTO> personalInterestsDTO, PersonEntity person) {
         Set<Long> processedRoleIds = new HashSet<>();
 
         return personalInterestsDTO.stream().map(dto -> {
@@ -301,7 +301,7 @@ public class PersonServiceImpl implements IPersonService {
         person.getPersonalInterestsList().addAll(finalList);
     }
 
-    private List<PersonalProjectInterestsEntity> processPersonalProjectInterests(List<PersonDTO.PersonalProjectInterestCreateDTO> projectInterestsDTO, PersonEntity person) {
+    private List<PersonalProjectInterestsEntity> processPersonalProjectInterests(List<PersonalProjectInterestDTO.PersonalProjectInterestCreateDTO> projectInterestsDTO, PersonEntity person) {
         Set<Long> processedProjectIds = new HashSet<>();
 
         List<ProjectEntity> allProjects = projectRepository.findAll();
@@ -346,13 +346,13 @@ public class PersonServiceImpl implements IPersonService {
         person.getPersonalProjectInterestsList().addAll(finalList);
     }
 
-    private PersonTestEntity processPersonTest(PersonDTO.PersonTestCreateDTO personTestDTO, PersonEntity person) {
+    private PersonTestEntity processPersonTest(PersonTestDTO.PersonTestCreateDTO personTestDTO, PersonEntity person) {
         PersonTestEntity pt = modelMapper.map(personTestDTO, PersonTestEntity.class);
         pt.setPerson(person);
         return pt;
     }
 
-    private List<PersonConflictEntity> processPersonConflicts(List<PersonDTO.PersonConflictCreateDTO> personConflictsDTO, PersonEntity person) {
+    private List<PersonConflictEntity> processPersonConflicts(List<PersonConflictDTO.PersonConflictCreateDTO> personConflictsDTO, PersonEntity person) {
         Set<String> processedConflictKeys = new HashSet<>();
 
         return personConflictsDTO.stream().map(dto -> {
@@ -438,7 +438,7 @@ public class PersonServiceImpl implements IPersonService {
         if (person.getCompetenceValueList() != null) {
             responseDTO.setCompetenceValues(person.getCompetenceValueList().stream()
                     .map(cv -> {
-                        PersonDTO.CompetenceValueResponseDTO dto = modelMapper.map(cv, PersonDTO.CompetenceValueResponseDTO.class);
+                        CompetenceValueDTO.CompetenceValueResponseDTO dto = modelMapper.map(cv, CompetenceValueDTO.CompetenceValueResponseDTO.class);
                         dto.setCompetence(modelMapper.map(cv.getCompetence(), CompetenceDTO.CompetenceMinimalDTO.class));
                         dto.setLevel(modelMapper.map(cv.getLevel(), LevelsDTO.LevelsResponseDTO.class));
                         return dto;
@@ -449,7 +449,7 @@ public class PersonServiceImpl implements IPersonService {
         if (person.getPersonalInterestsList() != null) {
             responseDTO.setPersonalInterests(person.getPersonalInterestsList().stream()
                     .map(pi -> {
-                        PersonDTO.PersonalInterestResponseDTO dto = modelMapper.map(pi, PersonDTO.PersonalInterestResponseDTO.class);
+                        PersonalInterestDTP.PersonalInterestResponseDTO dto = modelMapper.map(pi, PersonalInterestDTP.PersonalInterestResponseDTO.class);
                         dto.setRole(modelMapper.map(pi.getRole(), RoleDTO.RoleMinimalDTO.class));
                         return dto;
                     })
@@ -459,21 +459,21 @@ public class PersonServiceImpl implements IPersonService {
         if (person.getPersonalProjectInterestsList() != null) {
             responseDTO.setPersonalProjectInterests(person.getPersonalProjectInterestsList().stream()
                     .map(ppi -> {
-                        PersonDTO.PersonalProjectInterestResponseDTO dto = modelMapper.map(ppi, PersonDTO.PersonalProjectInterestResponseDTO.class);
-                        dto.setProject(modelMapper.map(ppi.getProject(), PersonDTO.ProjectMinimalDTO.class));
+                        PersonalProjectInterestDTO.PersonalProjectInterestResponseDTO dto = modelMapper.map(ppi, PersonalProjectInterestDTO.PersonalProjectInterestResponseDTO.class);
+                        dto.setProject(modelMapper.map(ppi.getProject(), ProjectDTO.ProjectResponseDTO.class));
                         return dto;
                     })
                     .collect(Collectors.toList()));
         }
 
         if (person.getPersonTest() != null) {
-            responseDTO.setPersonTest(modelMapper.map(person.getPersonTest(), PersonDTO.PersonTestResponseDTO.class));
+            responseDTO.setPersonTest(modelMapper.map(person.getPersonTest(), PersonTestDTO.PersonTestResponseDTO.class));
         }
 
         if (person.getPersonConflictList() != null) {
             responseDTO.setPersonConflicts(person.getPersonConflictList().stream()
                     .map(pc -> {
-                        PersonDTO.PersonConflictResponseDTO dto = modelMapper.map(pc, PersonDTO.PersonConflictResponseDTO.class);
+                        PersonConflictDTO.PersonConflictResponseDTO dto = modelMapper.map(pc, PersonConflictDTO.PersonConflictResponseDTO.class);
                         dto.setConflictIndex(modelMapper.map(pc.getIndex(), ConflictIndexDTO.ConflictIndexResponseDTO.class));
                         dto.setPersonConflict(modelMapper.map(pc.getPersonConflict(), PersonDTO.PersonMinimalDTO.class));
                         return dto;
