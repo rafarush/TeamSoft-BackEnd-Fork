@@ -3,14 +3,12 @@ package com.tesis.teamsoft.external.combination_mod.services.implementations;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.tesis.teamsoft.configuration.CombinationModApiConfig;
 import com.tesis.teamsoft.external.combination_mod.BaseExternalService;
-import com.tesis.teamsoft.external.combination_mod.dtos.ExampleDTO;
 import com.tesis.teamsoft.external.combination_mod.services.interfaces.IExternalApiService;
+import com.tesis.teamsoft.presentation.dto.TeamProposalDTO;
 import reactor.core.publisher.Mono;
-import jakarta.validation.ValidationException;
 import lombok.extern.slf4j.Slf4j;
 import org.hibernate.service.spi.ServiceException;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpStatusCode;
 import org.springframework.stereotype.Service;
 import org.springframework.web.reactive.function.client.WebClient;
@@ -18,14 +16,13 @@ import org.springframework.web.reactive.function.client.WebClientResponseExcepti
 import reactor.util.retry.Retry;
 
 import java.time.Duration;
-import java.util.Map;
 import java.util.concurrent.TimeoutException;
 
 @Service
 @Slf4j
 public class CombinationService
-        extends BaseExternalService<ExampleDTO.ExampleInputDTO, ExampleDTO.ExampleOutputDTO>
-        implements IExternalApiService<ExampleDTO.ExampleInputDTO, ExampleDTO.ExampleOutputDTO> {
+        extends BaseExternalService<TeamProposalDTO, TeamProposalDTO>
+        implements IExternalApiService<TeamProposalDTO, TeamProposalDTO> {
 
     private final ObjectMapper objectMapper;
 
@@ -38,7 +35,7 @@ public class CombinationService
     }
 
     @Override
-    public ExampleDTO.ExampleOutputDTO fetchData(ExampleDTO.ExampleInputDTO inputDTO) {
+    public TeamProposalDTO fetchData(TeamProposalDTO inputDTO) {
         log.info("INITIALIZING FETCHING DATA CALL");
 
 //        validateInput(inputDTO);
@@ -56,17 +53,17 @@ public class CombinationService
     }
 
     @Override
-    protected ExampleDTO.ExampleOutputDTO callExternalApi(ExampleDTO.ExampleInputDTO input) {
+    protected TeamProposalDTO callExternalApi(TeamProposalDTO input) {
         CombinationModApiConfig.ServiceConfig config = apiConfig.getServiceConfig(serviceName);
 
-        Map<String, Object> requestBody = Map.of(
-                "message", input.getMessage()
-        );
+//        Map<String, Object> requestBody = Map.of(
+//                "message", input
+//        );
 
         return webClient
                 .post()
                 .uri(config.getEndpoint())
-                .bodyValue(requestBody)
+                .bodyValue(input)
                 .retrieve()
                 .onStatus(HttpStatusCode::is4xxClientError, response -> {
                     log.warn("Error 4xx in external API");
@@ -76,7 +73,7 @@ public class CombinationService
                     log.error("Error 5xx in external API");
                     return Mono.error(new ServiceException("SERVER ERROR IN EXTERNAL API"));
                 })
-                .bodyToMono(ExampleDTO.ExampleOutputDTO.class)
+                .bodyToMono(TeamProposalDTO.class)
                 .timeout(Duration.ofSeconds(apiConfig.getTimeoutSeconds()))
                 .retryWhen(Retry.backoff(apiConfig.getMaxRetries(),
                                 Duration.ofSeconds(1))

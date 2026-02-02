@@ -1,9 +1,8 @@
 package com.tesis.teamsoft.presentation.controller.external;
 
 
-import com.tesis.teamsoft.external.combination_mod.dtos.ExampleDTO;
 import com.tesis.teamsoft.external.combination_mod.services.implementations.CombinationService;
-import com.tesis.teamsoft.presentation.dto.LoginDTO;
+import com.tesis.teamsoft.presentation.dto.TeamProposalDTO;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
@@ -12,11 +11,8 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
-import java.util.HashMap;
 import java.util.Map;
 
 @RestController
@@ -31,7 +27,7 @@ public class CombinationModController {
         this.combinationService = combinationService;
     }
 
-    @GetMapping("/combine")
+    @PostMapping("/combine")
     @Operation(
             summary = "Combine team members",
             description = "Combine teams using the combination module"
@@ -45,12 +41,12 @@ public class CombinationModController {
             @ApiResponse(responseCode = "502", description = "External API Error"),
             @ApiResponse(responseCode = "504", description = "External API Timeout")
     })
-    public ResponseEntity<?> combineTeams(ExampleDTO.ExampleInputDTO exampleInputDTO) {
+    public ResponseEntity<?> combineTeams(@RequestBody TeamProposalDTO inputDTO) {
         try {
-            ExampleDTO.ExampleOutputDTO response = combinationService.fetchData(exampleInputDTO);
+            TeamProposalDTO response = combinationService.fetchData(inputDTO);
             return ResponseEntity.ok(response);
         } catch (Exception e) {
-            log.warn("Request failed for message: {}", exampleInputDTO.getMessage(), e);
+            log.warn("Request failed for message: {}", inputDTO, e);
             return ResponseEntity.status(HttpStatus.BAD_GATEWAY)
                     .body(Map.of("Error", "External API Error"));
         }
