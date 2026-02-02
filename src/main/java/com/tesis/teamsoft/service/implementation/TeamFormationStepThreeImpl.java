@@ -57,6 +57,13 @@ public class TeamFormationStepThreeImpl implements ITeamFormationStepThreeServic
     @Autowired
     private IPersonGroupRepository iPersonGroupRepository;
 
+    @Autowired
+    private IRoleRepository roleRepository;
+
+    @Autowired
+    private IAssignedRoleRepository assignedRoleRepository;
+
+
     public List<TeamProposalDTO>  getTeam(TeamFormationParameters parameters, List<Long> projectsIDs, List<Long> groupIDs) throws Exception {
 
         parameters.setProjects(formatProjects(getUnsavedProjects(projectsIDs)));
@@ -220,81 +227,84 @@ public class TeamFormationStepThreeImpl implements ITeamFormationStepThreeServic
         return teamProposal;
     }
 
-//    public TreeNode buildTeamProposalTree(List<State> teamProposal, TeamFormationParameters parameters) throws NoSuchFieldException, IllegalArgumentException, IllegalAccessException {
-//        TreeNode root = TreeNode.createRootNode(); // En lugar de new DefaultTreeNode()
-//
-//        if (!teamProposal.isEmpty()) {
-//            String format = ResourceBundle.getBundle("/algorithmConf").getString("decimalFormat");
-//            DecimalFormat df = new DecimalFormat(format);
-//            root.setExpanded(true);
-//            TreeNode prop;
-//            TreeNode projectNode;
-//            TreeNode roleNode;
-//            TreeNode personNode;
-//
-//            ArrayList<ObjetiveFunction> objectiveFunctions = new ArrayList<>(ObjetiveFunctionUtil.getObjectiveFunctions(parameters));
-//
-//            for (State state : teamProposal) {
-//                if (state != null) {
-//                    StringBuilder eval = new StringBuilder();
-//                    if (state.getEvaluation().size() == 1) {
-//                        eval.append(" ").append(objectiveFunctions.getFirst().getClass().getField("className").get(null));
-//                        for (int i = 1; i < objectiveFunctions.size(); i++) {
-//                            eval.append(" | ").append(objectiveFunctions.get(i).getClass().getField("className").get(null));
-//                        }
-//                        eval.append(": ").append(df.format(state.getEvaluation().getFirst()));
-//                    } else {
-//                        for (int i = 0; i < objectiveFunctions.size(); i++) {
-//                            eval.append(" ").append(objectiveFunctions.get(i).getClass().getField("className").get(null)).append(": ").append(df.format(state.getEvaluation().get(i)));
-//                        }
-//                    }
-//                    String formattedEval = "Propuesta: " + eval.toString();
-//
-//                    prop = new DefaultTreeNode(formattedEval);
-//                    prop.setType("Prop");
-//                    prop.setExpanded(false);
-//                    root.getChildren().add(prop);
-//
-//                    List<Object> projects = state.getCode();
-//
-//                    if (projects != null) {
-//                        for (Object proj : projects) {
-//                            ProjectRole projectRole = (ProjectRole) proj;
-//
-//                            projectNode = new DefaultTreeNode(modelMapper.map(projectRole.getProject(), ProjectDTO.ProjectResponseDTO.class));
-//                            projectNode.setType("P");
-//                            projectNode.setSelectable(false);
-//                            projectNode.setExpanded(false);
-//                            prop.getChildren().add(projectNode);
-//
-//                            for (RoleWorker pr : projectRole.getRoleWorkers()) {
-//                                if (pr != null) {
-//                                    roleNode = new DefaultTreeNode(modelMapper.map(pr.getRole(), RoleDTO.RoleResponseDTO.class));
-//                                    roleNode.setType("R");
-//                                    roleNode.setSelectable(false);
-//                                    roleNode.setExpanded(true);
-//                                    projectNode.getChildren().add(roleNode);
-//
-//                                    pr.getWorkers().addAll(pr.getFixedWorkers());
-//                                    for (PersonEntity p : pr.getWorkers()) {
-//                                        if (p != null) {
-//                                            personNode = new DefaultTreeNode(modelMapper.map(p, PersonDTO.PersonResponseDTO.class));
-//                                            personNode.setType("W");
-//                                            personNode.setSelectable(true);
-//                                            personNode.setExpanded(true);
-//                                            roleNode.getChildren().add(personNode);
-//                                        }
-//                                    }
-//                                }
-//                            }
-//                        }
-//                    }
-//                }
-//            }
-//        }
-//
-//        return root;
-//    }
+
+    public List<ProjectRole> getProjectRolesForSaveTeam(TeamProposalDTO teamProposalDTO) {
+        List<ProjectRole> projectRoles = new ArrayList<>();
+
+        if (teamProposalDTO != null && teamProposalDTO.getProjectsProposal() != null) {
+            for (ProjectDTO.ProjectTeamProposalDTO projectProposal : teamProposalDTO.getProjectsProposal()) {
+                ProjectRole projectRole = new ProjectRole();
+
+                List<ProjectEntity> allProjects = projectRepository.findAll();
+                Map<Long, ProjectEntity> projectMap = allProjects.stream()
+                        .collect(Collectors.toMap(ProjectEntity::getId, Function.identity()));
+                ProjectEntity project = projectMap.get(projectProposal.getProject().getId());
+                if (project == null) {
+                    throw new RuntimeException("Project not found with ID: " + projectProposal.getProject().getId());
+                }
+                projectRole.setProject(project);
+                List<RoleWorker> roleWorkers = new ArrayList<>();
+
+                for (AssignedRoleDTO assignedRole : projectProposal.getAssignedRoles()) {
+                    RoleWorker roleWorker = new RoleWorker();
+
+                    // Obtener la entidad Role completa usando el ID del DTO
+                    RoleEntity role = roleRepository.findById(assignedRole.getRole().getId())
+                            .orElseThrow(() -> new RuntimeException("Role not found with id: " + assignedRole.getRole().getId()));
+                    roleWorker.setRole(role);
+
+                    List<PersonEntity> workers = new ArrayList<>();
+                    for (PersonDTO.PersonMinimalDTO personMinimal : assignedRole.getPersons()) {
+                        // Obtener la entidad PersonEntity completa usando el ID del DTO
+                        PersonEntity person = personRepository.findById(personMinimal.getId())
+                                .orElseThrow(() -> new RuntimeException("Person not found with id: " + personMinimal.getId()));
+                        workers.add(person);
+                    }
+                    roleWorker.setWorkers(workers);
+                    roleWorkers.add(roleWorker);
+                }
+                projectRole.setRoleWorkers(roleWorkers);
+                projectRoles.add(projectRole);
+            }
+        }
+        return projectRoles;
+    }
+
+
+    public TeamProposalDTO saveTeamProposal(TeamProposalDTO teamProposalDTO) throws Exception {
+        if (teamProposalDTO == null) {
+            throw new IllegalArgumentException("Team proposal is null");
+        }
+
+        // Obtener la lista de ProjectRole a partir del DTO
+        List<ProjectRole> projectRoles = getProjectRolesForSaveTeam(teamProposalDTO);
+        Date currentDate = new Date();
+
+        for (ProjectRole projectRole : projectRoles) {
+            // Obtener el último ciclo del proyecto (similar a como se hacía en TeamBuilder.lastProjectCycle)
+            CycleEntity lastCycle = TeamBuilder.lastProjectCycle(projectRole.getProject());
+
+            for (RoleWorker roleWorker : projectRole.getRoleWorkers()) {
+                RoleEntity role = roleWorker.getRole();
+                for (PersonEntity person : roleWorker.getWorkers()) {
+                    // Crear y guardar la asignación
+                    AssignedRoleEntity assignedRole = new AssignedRoleEntity();
+                    assignedRole.setStatus("ACTIVE"); // o el status que corresponda
+                    assignedRole.setObservation("Assigned by team formation algorithm");
+                    assignedRole.setBeginDate(currentDate);
+                    assignedRole.setCycles(lastCycle);
+                    assignedRole.setRole(role);
+                    assignedRole.setPerson(person); // Asumiendo que la entidad AssignedRoleEntity tiene una relación con PersonEntity
+
+                    // Guardar la asignación
+                    assignedRoleRepository.save(assignedRole);
+                }
+            }
+        }
+
+        return teamProposalDTO;
+    }
+
 
     public List<TeamProposalDTO> buildTeamProposalTree(List<State> teamProposal, TeamFormationParameters parameters) throws NoSuchFieldException, IllegalArgumentException, IllegalAccessException {
         List<TeamProposalDTO> teamsProposal = new ArrayList<>();
@@ -597,8 +607,8 @@ public class TeamFormationStepThreeImpl implements ITeamFormationStepThreeServic
         return groups;
     }
 
-    public List getRestrictions(TeamFormationParameters parameters) {
-        List restrictions = new ArrayList();
+    public List<Constrain> getRestrictions(TeamFormationParameters parameters) {
+        List<Constrain> restrictions = new ArrayList<>();
 
         if (parameters != null) {
             restrictions.add(new WorkerNotRepeatedInSameRole());//obligatoria, evitar que se repita la misma persona en un rol

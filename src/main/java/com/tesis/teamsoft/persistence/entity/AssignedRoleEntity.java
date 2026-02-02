@@ -61,21 +61,7 @@ public class AssignedRoleEntity implements Serializable {
     @ManyToOne(optional = false)
     private PersonEntity person;
     //=====================================================================================================================
-
-
-    //Validaciones
-    //=====================================================================================================================
-
-    // Validación personalizada para lógica de fechas
-    @AssertTrue(message = "La fecha de fin debe ser posterior a la fecha de inicio")
-    public boolean isDateRangeValid() {
-        if (endDate != null && beginDate != null) {
-            return endDate.after(beginDate);
-        }
-        return false;
-    }
-    //=====================================================================================================================
-
+    
 
     //Métodos
     //=====================================================================================================================
