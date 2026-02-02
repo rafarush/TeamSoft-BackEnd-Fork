@@ -21,7 +21,7 @@ public class TeamFormationController {
     @Autowired
     private TeamFormationStepThreeImpl teamFormationStepThree;
 
-    @PostMapping("teams")
+    @PostMapping()
     @PreAuthorize("hasRole('EXPERIMENTADOR') OR hasRole('DIRECTIVO_TECNICO')")
     public ResponseEntity<?> getTeams(@RequestBody TeamFormationDTO dto) {
 
